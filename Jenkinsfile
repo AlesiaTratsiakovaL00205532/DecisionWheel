@@ -14,14 +14,21 @@ pipeline {
         DOCKER_CLI = 'C:\\Users\\atratsiakova\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         DOCKER_ENDPOINT = 'npipe:////./pipe/dockerDesktopLinuxEngine'
         IMAGE_NAME = 'ghcr.io/alesiatratsiakoval00205532/decision-wheel'
+        TRIVY_IMAGE = 'aquasec/trivy:0.76.2'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
                 script {
-                    env.IMAGE_TAG = "sha-${env.GIT_COMMIT}"
+                    def revision = checkout scm
+                    if (!revision.GIT_COMMIT || !revision.GIT_BRANCH) {
+                        error 'Git checkout did not provide a commit and branch.'
+                    }
+                    env.GIT_COMMIT = revision.GIT_COMMIT
+                    env.GIT_BRANCH = revision.GIT_BRANCH
+                    env.IMAGE_TAG = "sha-${revision.GIT_COMMIT}"
+                    echo "Checked out ${env.GIT_BRANCH} at ${env.GIT_COMMIT}"
                 }
                 dir('reports') {
                     deleteDir()
@@ -43,6 +50,20 @@ pipeline {
         stage('Static analysis') {
             steps {
                 bat 'call npm.cmd run lint'
+            }
+        }
+
+        stage('Dependency vulnerability scan') {
+            steps {
+                powershell '''
+                    $ErrorActionPreference = 'Stop'
+                    New-Item -ItemType Directory -Force -Path 'reports' | Out-Null
+                    & npm.cmd audit --include=dev --audit-level=high --json |
+                        Set-Content -Encoding UTF8 -Path 'reports/npm-audit.json'
+                    if ($LASTEXITCODE -ne 0) {
+                        throw 'Dependency audit failed (vulnerabilities or audit service error). See reports/npm-audit.json.'
+                    }
+                '''
             }
         }
 
@@ -85,6 +106,43 @@ pipeline {
                         --label "org.opencontainers.image.revision=$env:GIT_COMMIT" .
                     if ($LASTEXITCODE -ne 0) {
                         throw 'Docker image build failed.'
+                    }
+                '''
+            }
+        }
+
+        stage('Container vulnerability scan') {
+            steps {
+                powershell '''
+                    $ErrorActionPreference = 'Stop'
+                    $image = '{0}:{1}' -f $env:IMAGE_NAME, $env:IMAGE_TAG
+                    New-Item -ItemType Directory -Force -Path 'reports' | Out-Null
+                    $reportDirectory = (Resolve-Path 'reports').Path
+                    $archive = Join-Path $reportDirectory 'image-scan.tar'
+                    try {
+                        & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT image save --output $archive $image
+                        if ($LASTEXITCODE -ne 0) {
+                            throw 'Could not export the image for scanning.'
+                        }
+                        & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT run --rm `
+                            --mount "type=bind,source=$reportDirectory,target=/reports" `
+                            --mount 'type=volume,source=decision-wheel-trivy-cache,target=/root/.cache/trivy' `
+                            $env:TRIVY_IMAGE image --scanners vuln --offline-scan --disable-telemetry `
+                            --timeout 10m --no-progress --format json --output /reports/trivy.json --input /reports/image-scan.tar
+                        if ($LASTEXITCODE -ne 0) {
+                            throw 'Trivy could not complete the image scan.'
+                        }
+                        & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT run --rm `
+                            --mount "type=bind,source=$reportDirectory,target=/reports,readonly" `
+                            $env:TRIVY_IMAGE convert --format table --severity HIGH,CRITICAL `
+                            --exit-code 1 /reports/trivy.json
+                        if ($LASTEXITCODE -ne 0) {
+                            throw 'Trivy security gate failed. See reports/trivy.json.'
+                        }
+                    } finally {
+                        if (Test-Path -LiteralPath $archive) {
+                            Remove-Item -LiteralPath $archive -Force
+                        }
                     }
                 '''
             }
@@ -136,7 +194,7 @@ pipeline {
     post {
         always {
             junit testResults: 'reports/*.xml', allowEmptyResults: true
-            archiveArtifacts artifacts: 'reports/*.xml,reports/image.txt,test-results/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'reports/*.xml,reports/npm-audit.json,reports/trivy.json,reports/image.txt,test-results/**', allowEmptyArchive: true
         }
     }
 }
