@@ -91,10 +91,12 @@ part of this local Docker step.
 
 The root `Jenkinsfile` checks out the configured branch, installs the locked
 dependencies with `npm ci`, runs the **Static analysis** ESLint stage, then
-unit/integration tests, installs Chromium and runs the browser tests.
+audits dependencies, runs unit/integration tests, installs Chromium and runs
+the browser tests.
 After those checks pass, it verifies Docker access and builds a commit-tagged
-image. Builds of `main` then publish the image to GitHub Container Registry
-(GHCR); builds of other branches skip publishing.
+image and scans it with Trivy. Builds of `main` publish the image to GitHub
+Container Registry (GHCR) only after both vulnerability gates pass; builds
+of other branches skip publishing.
 Non-zero command exit codes fail the build and skip
 later stages. The final reporting steps still run so available JUnit results
 and browser failure artifacts can be inspected.
@@ -119,6 +121,42 @@ to running untrusted changes under a privileged Jenkins service account.
 
 A successful local test run is not evidence of a Jenkins build; retain the
 Jenkins run and its reports separately.
+
+### Vulnerability scans and gates
+
+The **Dependency vulnerability scan** runs `npm audit` against the configured
+npm registry, including both production and development dependencies. The
+**Container vulnerability scan** checks the built image's operating-system
+packages and application dependencies with `aquasec/trivy:0.76.2`.
+
+Both gates fail for **high or critical** vulnerabilities, including findings
+without an available fix. Lower severities remain in the JSON reports but do
+not block publishing. Audit-service, database-download and scanner errors also
+fail the build rather than being treated as a clean scan. In Jenkins, download
+`reports/npm-audit.json` and `reports/trivy.json` from the build artifacts;
+available reports are retained even when a gate fails. A failed dependency
+audit stops later stages, so there will be no image report from that run.
+
+Trivy runs in a disposable container; no Windows Trivy installation is needed.
+The pipeline exports the local image to a temporary tar file, scans that file
+without mounting the Docker socket, and removes the tar in `finally`.
+The full JSON scan is converted into a high/critical console report and exit
+code without scanning the image a second time. Trivy does not receive GHCR
+credentials. Dependency-identification API calls and scanner telemetry are
+disabled; database downloads remain enabled.
+
+Docker Desktop must be able to bind-mount the Jenkins `reports` directory.
+The named Docker volume `decision-wheel-trivy-cache` retains the vulnerability
+database between builds. The first run downloads the scanner image and
+database, so allow additional time and network access to Docker Hub and the
+Trivy database registries. Upgrade the pinned scanner version deliberately.
+These checks do not prove the image is free of vulnerabilities.
+
+To run the dependency gate locally:
+
+```powershell
+npm audit --include=dev --audit-level=high
+```
 
 ### Docker access and GHCR credentials
 
@@ -150,16 +188,19 @@ ghcr.io/alesiatratsiakoval00205532/decision-wheel:sha-<full-git-commit>
 ```
 
 The source-repository and revision labels identify where the image came from.
+The checkout stage explicitly records the commit and branch returned by Git;
+missing metadata fails the build instead of producing a `sha-null` tag.
 After a successful push, `reports/image.txt` is archived with the image tag,
 commit and repository digest information. Commit tags provide traceability,
 not enforced immutability; digests identify the actual published content.
 
 For the first run, merge the reviewed change to `main` and let the existing
-SCM polling trigger start Jenkins. Confirm **Check Docker access**, **Build
-Docker image** and **Publish to GHCR** pass. Verify the commit tag under your
-GitHub profile's **Packages**. New packages default to private: change this
+SCM polling trigger start Jenkins. Confirm both vulnerability scans, **Check
+Docker access**, **Build Docker image** and **Publish to GHCR** pass. Verify
+the commit tag under your GitHub profile's **Packages**. New packages default
+to private: change this
 package's visibility to **Public** if anonymous downloads are required. A
 public repository alone does not make its package public.
 
-Deployment, vulnerability scanning and observability are later assignment
+Deployment and observability are later assignment
 steps; publishing an image does not establish that it is vulnerability-free.
