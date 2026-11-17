@@ -27,6 +27,7 @@ the answer endpoint for validation but are not saved or logged by the applicatio
 ## Checks
 
 ```powershell
+npm run lint
 npm test
 npx playwright install chromium
 npm run test:browser
@@ -37,11 +38,21 @@ Browser tests cover spinning, history order, refresh confirmation, failed
 requests and a mobile layout. Browser tests start and stop their own local
 server, so port 3000 must be available.
 
+ESLint checks application code, tests and JavaScript configuration files using
+the recommended rules plus strict equality, `const` preference and no `var`.
+Node.js and browser globals are scoped to the corresponding files; browser
+tests have both because their page callbacks execute in the browser. Unused
+variables and arguments fail lint, except intentionally unused arguments
+prefixed with `_` (such as Express middleware parameters). Generated reports,
+coverage and dependencies are excluded. Both lint errors and warnings fail
+`npm run lint`.
+
 ## Windows Jenkins pipeline
 
 The root `Jenkinsfile` checks out the configured branch, installs the locked
-dependencies with `npm ci`, runs unit/integration tests, installs Chromium and
-runs the browser tests. Non-zero command exit codes fail the build and skip
+dependencies with `npm ci`, runs the **Static analysis** ESLint stage, then
+unit/integration tests, installs Chromium and runs the browser tests.
+Non-zero command exit codes fail the build and skip
 later stages. The final reporting steps still run so available JUnit results
 and browser failure artifacts can be inspected.
 
