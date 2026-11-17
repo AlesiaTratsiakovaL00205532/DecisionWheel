@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f5f1">
+    <title>Decision Wheel | A little help choosing</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script type="module" src="/app.js"></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="page-header">
+        <a class="brand" href="/" aria-label="Decision Wheel home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          Decision Wheel
+        </a>
+        <span class="header-note">Less overthinking. More spinning.</span>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <p class="eyebrow">A LITTLE HELP CHOOSING</p>
+          <h1 id="page-title">Got a question?<br>Give it a spin.</h1>
+          <p>For life's little indecisions. Ask your question and let the wheel weigh in.</p>
+        </section>
+
+        <div class="workspace">
+          <section class="card decision-card" aria-label="Ask the decision wheel">
+            <form id="question-form">
+              <label for="question">What's on your mind?</label>
+              <div class="input-row">
+                <input
+                  id="question"
+                  name="question"
+                  type="text"
+                  placeholder="Should I take a coffee break?"
+                  maxlength="240"
+                  autocomplete="off"
+                  aria-describedby="question-error"
+                  required
+                >
+                <button id="spin-button" type="submit">
+                  <span id="button-label">Spin the wheel</span>
+                  <span aria-hidden="true">&#8599;</span>
+                </button>
+              </div>
+              <p id="question-error" class="form-error" role="alert"></p>
+            </form>
+
+            <div class="wheel-stage">
+              <div class="wheel-wrap">
+                <div class="pointer" aria-hidden="true"></div>
+                <div id="wheel" class="wheel" role="img" aria-label="Four equal sectors: Yes, No, Maybe and Later">
+                  <span class="sector-label" style="--sector: 0">Yes</span>
+                  <span class="sector-label" style="--sector: 1">No</span>
+                  <span class="sector-label" style="--sector: 2">Maybe</span>
+                  <span class="sector-label" style="--sector: 3">Later</span>
+                </div>
+                <div class="wheel-hub" aria-hidden="true">
+                  <span>&#10022;</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="result" class="result" role="status" aria-live="polite">
+              <span class="result-caption">YOUR NEXT ANSWER AWAITS</span>
+              <p id="result-text">Ask away. The wheel is listening.</p>
+            </div>
+          </section>
+
+          <aside class="card history-card" aria-labelledby="history-title">
+            <div class="history-heading">
+              <h2 id="history-title">Your questions</h2>
+              <span id="history-count" class="count" aria-label="0 questions">0</span>
+            </div>
+            <p class="section-description">A little record of what the wheel said.</p>
+            <div id="empty-history" class="empty-history">
+              <span class="empty-icon" aria-hidden="true">&#8634;</span>
+              <h3>A fresh start</h3>
+              <p>Your questions and answers will<br>appear here after your first spin.</p>
+            </div>
+            <ol id="history-list" class="history-list" aria-label="Question and answer history"></ol>
+            <div class="history-notice">
+              <span aria-hidden="true">&#9432;</span>
+              <p>Just for this visit. Refreshing or leaving this page clears your history. Your browser may ask you to confirm.</p>
+            </div>
+          </aside>
+        </div>
+        <p class="footnote">A nudge, not life advice. The big decisions are still yours.</p>
+      </main>
+      <footer>Four possibilities. One less thing to overthink.</footer>
+    </div>
+  </body>
+</html>
