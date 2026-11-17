@@ -6,7 +6,6 @@ const button = document.querySelector('#spin-button');
 const buttonLabel = document.querySelector('#button-label');
 const wheel = document.querySelector('#wheel');
 const errorText = document.querySelector('#question-error');
-const result = document.querySelector('#result');
 const resultText = document.querySelector('#result-text');
 const historyList = document.querySelector('#history-list');
 const historyCount = document.querySelector('#history-count');
@@ -89,8 +88,6 @@ form.addEventListener('submit', async (event) => {
   errorText.textContent = '';
   input.removeAttribute('aria-invalid');
   const previousResult = resultText.textContent;
-  const previousAnswer = result.dataset.answer;
-  delete result.dataset.answer;
   resultText.textContent = 'A few turns. A little possibility.';
 
   try {
@@ -105,14 +102,12 @@ form.addEventListener('submit', async (event) => {
       throw new Error('The wheel returned an invalid answer. Please try again.');
     }
     await spinTo(index);
-    result.dataset.answer = answer;
     resultText.textContent = answer;
     addHistory(question, answer);
     input.value = '';
   } catch {
     errorText.textContent = 'Could not reach the wheel. Please try again.';
     resultText.textContent = previousResult;
-    if (previousAnswer) result.dataset.answer = previousAnswer;
   } finally {
     spinning = false;
     button.disabled = false;

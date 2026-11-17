@@ -14,7 +14,7 @@ Open <http://127.0.0.1:3000>. Stop the server with Ctrl+C.
 For automatic server restarts during development, use `npm run dev`.
 
 Ask a question of up to 240 characters. The server randomly chooses Yes, No,
-Maybe or Later, and the wheel spins for approximately four seconds before
+Maybe or Later, and the wheel spins for approximately five seconds before
 showing the answer. Reduced-motion preferences shorten the animation.
 Each sector has an equal chance; previous answers do not influence later spins.
 
