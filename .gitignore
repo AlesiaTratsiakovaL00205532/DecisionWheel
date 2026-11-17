@@ -3,6 +3,7 @@ logs
 *.log
 playwright-report/
 test-results/
+reports/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
