@@ -69,7 +69,7 @@ pipeline {
 
         stage('Unit and integration tests') {
             steps {
-                bat 'call npm.cmd test -- --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml'
+                bat 'call npm.cmd run test:ci'
             }
         }
 
@@ -100,7 +100,7 @@ pipeline {
             steps {
                 powershell '''
                     $image = '{0}:{1}' -f $env:IMAGE_NAME, $env:IMAGE_TAG
-                    & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT build `
+                    & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT build --pull `
                         --tag $image `
                         --label 'org.opencontainers.image.source=https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel' `
                         --label "org.opencontainers.image.revision=$env:GIT_COMMIT" .
@@ -134,7 +134,7 @@ pipeline {
                         }
                         & $env:DOCKER_CLI --host $env:DOCKER_ENDPOINT run --rm `
                             --mount "type=bind,source=$reportDirectory,target=/reports,readonly" `
-                            $env:TRIVY_IMAGE convert --format table --severity HIGH,CRITICAL `
+                            $env:TRIVY_IMAGE convert --scanners vuln --format table --severity HIGH,CRITICAL `
                             --exit-code 1 /reports/trivy.json
                         if ($LASTEXITCODE -ne 0) {
                             throw 'Trivy security gate failed. See reports/trivy.json.'
