@@ -34,6 +34,9 @@ npm run test:browser
 ```
 
 The unit/API tests cover wheel landing positions and question validation.
+They use Node.js's built-in test runner and assertions, with Supertest for the
+HTTP requests. `npm run test:ci` also writes the Jenkins JUnit report to
+`reports/unit-integration.xml`; create `reports` first when running it manually.
 Browser tests cover spinning, history order, refresh confirmation, failed
 requests and a mobile layout. Browser tests start and stop their own local
 server, so port 3000 must be available.
@@ -61,8 +64,12 @@ restricted to this machine, not the local network or internet. The container
 listens on `0.0.0.0:3000` internally; your ordinary local Node.js server still
 defaults to `127.0.0.1:3000`.
 
-The multi-stage image uses Node.js 26.13.1 on Debian Bookworm slim, installs
+The multi-stage image uses Node.js 26.13.1 on Alpine 3.24, installs
 only locked production dependencies, and runs as the unprivileged `node` user.
+The final runtime removes npm/npx because the application starts directly with
+Node.js; npm is available only in the dependency-build stage. The runtime
+also upgrades Alpine's zlib package to pick up its security fix. Jenkins builds
+with `--pull` to fetch updated base-image layers.
 Only the dependency manifests and `src`/`public` directories are allowed into
 the build context. Git history, tests/reports, local dependencies and other
 root files are excluded; environment files, private-key files and common local
@@ -123,6 +130,16 @@ A successful local test run is not evidence of a Jenkins build; retain the
 Jenkins run and its reports separately.
 
 ### Vulnerability scans and gates
+
+Vitest/Vite were replaced with Node.js's built-in test runner because their
+picomatch dependency had no patched release for
+[GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf).
+The existing unit/API cases and JUnit reporting are preserved. A temporary
+`minimatch` override selects the patched 11.0.6 release for ESLint's dependency
+tree; remove it when upstream dependencies select a patched release themselves.
+The Alpine runtime replaces the affected Debian packages, and removing runtime
+npm also removes its vulnerable bundled dependencies. The scan thresholds are
+unchanged; no vulnerabilities are suppressed.
 
 The **Dependency vulnerability scan** runs `npm audit` against
 `https://packagefeedproxy.microsoft.io/npm/`, including both production and
