@@ -20,7 +20,6 @@ const warnBeforeLeaving = (event) => {
 
 function spinTo(index) {
   return new Promise((resolve) => {
-    let timer;
     const finish = (event) => {
       if (event && (event.target !== wheel || event.propertyName !== 'transform')) {
         return;
@@ -31,7 +30,7 @@ function spinTo(index) {
     };
     wheel.addEventListener('transitionend', finish);
     const duration = Number.parseFloat(getComputedStyle(wheel).transitionDuration) * 1000;
-    timer = setTimeout(finish, duration + 200);
+    const timer = setTimeout(finish, duration + 200);
     rotation = targetRotation(rotation, index);
     wheel.style.transform = `rotate(${rotation}deg)`;
   });

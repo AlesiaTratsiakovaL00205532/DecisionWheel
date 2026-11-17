@@ -34,6 +34,12 @@ pipeline {
             }
         }
 
+        stage('Static analysis') {
+            steps {
+                bat 'call npm.cmd run lint'
+            }
+        }
+
         stage('Unit and integration tests') {
             steps {
                 bat 'call npm.cmd test -- --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml'
