@@ -47,6 +47,46 @@ prefixed with `_` (such as Express middleware parameters). Generated reports,
 coverage and dependencies are excluded. Both lint errors and warnings fail
 `npm run lint`.
 
+## Run with Docker
+
+With Docker Desktop's Linux engine running, build from the repository root:
+
+```powershell
+docker build --tag decision-wheel:local .
+docker run --detach --name decision-wheel --publish 127.0.0.1:3001:3000 decision-wheel:local
+```
+
+Open <http://127.0.0.1:3001> without authentication. The published port is
+restricted to this machine, not the local network or internet. The container
+listens on `0.0.0.0:3000` internally; your ordinary local Node.js server still
+defaults to `127.0.0.1:3000`.
+
+The multi-stage image uses Node.js 26.13.1 on Debian Bookworm slim, installs
+only locked production dependencies, and runs as the unprivileged `node` user.
+Only the dependency manifests and `src`/`public` directories are allowed into
+the build context. Git history, tests/reports, local dependencies and other
+root files are excluded; environment files, private-key files and common local
+artifacts are also excluded within the application directories.
+Do not put secrets in application source or public assets.
+
+Check the health endpoint and view startup logs:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:3001/health
+docker logs decision-wheel
+```
+
+Stop and remove this application container when finished:
+
+```powershell
+docker stop decision-wheel
+docker rm decision-wheel
+```
+
+This removes the container, not the image. History remains browser-only and
+is discarded on refresh. Image publishing and deployment automation are not
+part of this local Docker step.
+
 ## Windows Jenkins pipeline
 
 The root `Jenkinsfile` checks out the configured branch, installs the locked
@@ -73,6 +113,6 @@ as new ones. It does not use or change the `jenkins1` container. Use trusted
 repository code only; a dedicated, least-privilege build agent is preferable
 to running untrusted changes under a privileged Jenkins service account.
 
-Containers, deployment and observability will be added in later assignment
+Image publishing, deployment and observability will be added in later assignment
 tasks. A successful local test run is not evidence of a Jenkins build; retain
 the first Jenkins run and its reports separately.

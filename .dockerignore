@@ -1,0 +1,16 @@
+**
+!package.json
+!package-lock.json
+!src/
+!src/**
+!public/
+!public/**
+**/.git
+**/node_modules
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.log
+**/*.local
+**/*.local.*
