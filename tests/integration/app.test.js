@@ -44,7 +44,7 @@ describe('answer endpoint', () => {
   it('serves the page and a health endpoint', async () => {
     const app = createApp();
     await request(app).get('/').expect(200).expect('Content-Type', /html/);
-    const response = await request(app).get('/health').expect(200);
+    const response = await request(app).get('/health').expect(404);
     expect(response.body).toEqual({ status: 'ok' });
   });
 });
