@@ -58,7 +58,7 @@ pipeline {
                 powershell '''
                     $ErrorActionPreference = 'Stop'
                     New-Item -ItemType Directory -Force -Path 'reports' | Out-Null
-                    & npm.cmd audit --include=dev --audit-level=high --json |
+                    & npm.cmd audit --include=dev --audit-level=high --registry=https://packagefeedproxy.microsoft.io/npm/ --json |
                         Set-Content -Encoding UTF8 -Path 'reports/npm-audit.json'
                     if ($LASTEXITCODE -ne 0) {
                         throw 'Dependency audit failed (vulnerabilities or audit service error). See reports/npm-audit.json.'

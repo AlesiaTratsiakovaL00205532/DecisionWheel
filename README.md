@@ -124,8 +124,13 @@ Jenkins run and its reports separately.
 
 ### Vulnerability scans and gates
 
-The **Dependency vulnerability scan** runs `npm audit` against the configured
-npm registry, including both production and development dependencies. The
+The **Dependency vulnerability scan** runs `npm audit` against
+`https://packagefeedproxy.microsoft.io/npm/`, including both production and
+development dependencies. This explicit registry matches the local audit
+configuration; the current Jenkins agent cannot complete a TLS handshake
+with the default `registry.npmjs.org` audit endpoint. TLS verification remains
+enabled. If moving to another environment, use its approved audit-capable
+registry. The
 **Container vulnerability scan** checks the built image's operating-system
 packages and application dependencies with `aquasec/trivy:0.76.2`.
 
@@ -136,6 +141,8 @@ fail the build rather than being treated as a clean scan. In Jenkins, download
 `reports/npm-audit.json` and `reports/trivy.json` from the build artifacts;
 available reports are retained even when a gate fails. A failed dependency
 audit stops later stages, so there will be no image report from that run.
+If the registry returns HTTP 429, respect its `Retry-After` delay before
+rerunning the build; rate limiting is not a clean vulnerability scan.
 
 Trivy runs in a disposable container; no Windows Trivy installation is needed.
 The pipeline exports the local image to a temporary tar file, scans that file
@@ -155,7 +162,7 @@ These checks do not prove the image is free of vulnerabilities.
 To run the dependency gate locally:
 
 ```powershell
-npm audit --include=dev --audit-level=high
+npm audit --include=dev --audit-level=high --registry=https://packagefeedproxy.microsoft.io/npm/
 ```
 
 ### Docker access and GHCR credentials
