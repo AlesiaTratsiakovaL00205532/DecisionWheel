@@ -41,6 +41,13 @@ resource "kubernetes_service_account_v1" "app" {
 }
 
 resource "kubernetes_deployment_v1" "app" {
+  lifecycle {
+    ignore_changes = [
+      spec[0].template[0].spec[0].container[0].image,
+      spec[0].template[0].metadata[0].annotations["decision-wheel.local/deployment-id"]
+    ]
+  }
+
   metadata {
     name      = local.name
     namespace = kubernetes_namespace_v1.app.metadata[0].name

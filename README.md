@@ -166,9 +166,11 @@ dependencies with `npm ci`, runs the **Static analysis** ESLint stage, then
 audits dependencies, runs unit/integration tests, installs Chromium and runs
 the browser tests.
 After those checks pass, it verifies Docker access and builds a commit-tagged
-image and scans it with Trivy. Builds of `main` publish the image to GitHub
-Container Registry (GHCR) only after both vulnerability gates pass; builds
-of other branches skip publishing.
+image and scans it with Trivy. Only builds of `main` deliver, and only after
+all tests and both vulnerability gates pass. `DELIVERY_TARGET` explicitly
+selects one mode: `local-kind` (the default) loads/deploys locally, while
+`ghcr` attempts registry publication without local deployment.
+Other branches build/test/scan but do not load, deploy or publish.
 Non-zero command exit codes fail the build and skip
 later stages. The final reporting steps still run so available JUnit results
 and browser failure artifacts can be inspected.
@@ -264,6 +266,11 @@ engine's named pipe; an interactive user's successful Docker command does not
 prove the service account has access. No TCP Docker endpoint or changes to
 the `jenkins1` container are required.
 
+Local mode does not bind or require `ghcr-credentials`. It records
+`registry_published: false`; a successful local build does not mean GHCR was
+fixed. The following credential/publication instructions apply only to
+explicitly selected `ghcr` delivery.
+
 Create a Jenkins **Username with password** credential with ID
 `ghcr-credentials`: use your GitHub username and a personal access token
 **(classic)** with `write:packages` permission. Avoid unnecessary `repo` and
@@ -290,17 +297,96 @@ After a successful push, `reports/image.txt` is archived with the image tag,
 commit and repository digest information. Commit tags provide traceability,
 not enforced immutability; digests identify the actual published content.
 
-For the first run, merge the reviewed change to `main` and let the existing
-SCM polling trigger start Jenkins. Confirm both vulnerability scans, **Check
+For a GHCR run, select `DELIVERY_TARGET=ghcr` under **Build with Parameters**
+after merging the reviewed change to `main`. Confirm both vulnerability scans, **Check
 Docker access**, **Build Docker image** and **Publish to GHCR** pass. Verify
 the commit tag under your GitHub profile's **Packages**. New packages default
 to private: change this
 package's visibility to **Public** if anonymous downloads are required. A
 public repository alone does not make its package public.
 
-Automated Jenkins deployment remains a later assignment step; local
-observability is described below. Publishing an image does not establish
-that it is vulnerability-free.
+Local Jenkins deployment is described below; GHCR mode only publishes.
+Publishing an image does not establish that it is vulnerability-free.
+
+### Automated local delivery and recovery
+
+Bootstrap the existing `decision-wheel` kind cluster and Terraform resources
+first; the previous Deployment must already have a healthy version to
+recover to. `KIND_CLI` points to the installed Windows kind executable,
+alongside the explicit Docker Linux-engine endpoint. The Jenkins service
+account must be able to execute these tools. Loading images uses its existing,
+privileged Docker access, not an administrator Kubernetes credential.
+No cluster is created, deleted or reset by the delivery scripts.
+
+After merging, use **Build with Parameters > DELIVERY_TARGET > local-kind**.
+SCM-triggered builds use the default local mode. Refresh the expiring
+`decision-wheel-kubeconfig` Secret-file credential before building if needed.
+Only the existing restricted `jenkins-deployer` identity is accepted; no
+additional RBAC or Secrets access is granted.
+
+After the existing lint, audit, unit/API/browser and container gates pass:
+
+1. **Load local image** checks the commit tag and OCI revision label, verifies
+   the kind nodes belong to `decision-wheel`, and loads only that image into
+   the existing cluster. Loading failures stop before any Deployment change.
+2. **Deploy locally and verify** checks the previous rollout and HTTP
+   behaviour, then atomically patches only the named app image and an owned
+   rollout marker. A new marker forces replacement even when rebuilding the
+   same commit tag. Resource-version tests reject concurrent writes.
+3. Rollout monitoring waits up to two minutes. Every new replica, followed
+   by a Service-targeted forward, must return healthy JSON, the app page and
+   a valid response to a fixed synthetic spin. Questions/answers, raw
+   responses, credentials and forwarding diagnostics are not archived.
+4. On rollout/smoke failure, the script restores the previous image and
+   marker only if the failed update still belongs to this attempt and the
+   other desired settings have not changed. It verifies the recovered
+   rollout and HTTP behaviour. **The build still fails after recovery.**
+   Recovery failure or a concurrent change is reported for manual action,
+   never hidden or overwritten.
+
+No broad `rollout undo`, default/admin kubeconfig or unrelated resources are
+used. Each health forward binds to a random loopback port and is stopped in
+`finally`; user-owned forwards are not killed. Pod replacement can still
+disconnect a user's existing forward. A Service-targeted port-forward checks
+the Service mapping and selected Pod, not the in-cluster network dataplane
+or NetworkPolicy enforcement.
+
+Terraform bootstraps the image through `var.image`; afterward Jenkins owns
+the image field and `decision-wheel.local/deployment-id` Pod annotation.
+Terraform ignores only those fields, so a later normal apply does not
+silently undo delivery. Namespace/RBAC, probes, resource limits, replicas
+and other security settings remain Terraform-managed. Changing `var.image`
+does not update an existing Deployment. Keep the previous local image
+available for recovery.
+
+Jenkins archives `reports\local-image.json` (source commit, Docker image ID,
+cluster/nodes) and `reports\deployment.json` (candidate/previous image,
+result, failure phase and recovery outcome). These distinguish a successful
+rollout, verified rollback, failed recovery and a skipped concurrent update.
+The total pipeline budget is 45 minutes to leave room for the bounded audit
+retry, scans and recovery. Abrupt agent loss, process termination, expired
+credentials or the overall Jenkins timeout can prevent recovery; it is
+best-effort, not a transactional or zero-downtime guarantee. Inspect the
+report and cluster manually in those cases.
+
+For a controlled recovery demonstration, use a fresh restricted kubeconfig
+outside Git and an already tested/scanned local app image:
+
+```powershell
+$release = 'decision-wheel:sha-<full-source-commit>'
+docker build --file tests\fixtures\unhealthy.Dockerfile --build-arg "APP_IMAGE=$release" --tag decision-wheel:recovery-fixture .
+kind load docker-image decision-wheel:recovery-fixture --name decision-wheel
+.\scripts\deploy-local.ps1 -Image decision-wheel:recovery-fixture -Kubeconfig 'C:\private\jenkins-kubeconfig.json' -RolloutTimeoutSeconds 20 -ReportPath reports\recovery-drill.json
+```
+
+The fixture intentionally returns HTTP 503 without adding dependencies.
+Run only in this isolated lab with a healthy baseline. The expected command
+result is **exit 1**, report `result: rolled_back`, `recovery: verified`,
+and the previous image healthy afterward. This is a deliberate failure,
+not an image for release and not evidence of a Jenkins run. Kubernetes's
+rolling strategy keeps old ready replicas while the unhealthy one is pending,
+but monitoring may show the test failure. Do not select the fixture as a
+normal release or change CI gates for it.
 
 ### Current publishing blocker
 
@@ -323,9 +409,9 @@ an administrator policy or a faulty PAT.
 Publishing remains blocked; further authentication experiments are parked
 while independent assignment work continues.
 Do not disable TLS, bypass access controls or restart shared Docker workloads.
-Local builds, scans and the isolated kind deployment can support further
-assignment work, but are not evidence of registry publication or a successful
-end-to-end delivery pipeline.
+Local builds, scans and kind delivery are separate from registry publication.
+Only an actual Jenkins run of the new local mode establishes end-to-end
+local pipeline delivery; manual script verification is not a Jenkins run.
 
 ## Local Kubernetes with kind and Terraform
 
@@ -403,9 +489,9 @@ The Service is internal to Kubernetes, but this is **not** inter-pod network
 isolation: kind's default CNI does not enforce NetworkPolicy. Enforced network
 policies would require an appropriate CNI. No such isolation is claimed here.
 
-The initial image uses `imagePullPolicy: Never`, so only an explicitly loaded
-local image can run. For a different image, use a distinct tag and pass the
-same value to setup and Terraform:
+The app uses `imagePullPolicy: Never`, so only an explicitly loaded local
+image can run. For initial creation, use a distinct bootstrap tag and pass
+the same value to setup and Terraform:
 
 ```powershell
 .\infra\setup-kind.ps1 -Image decision-wheel:my-version
@@ -413,14 +499,16 @@ terraform -chdir=infra plan -var="image=decision-wheel:my-version"
 terraform -chdir=infra apply -var="image=decision-wheel:my-version"
 ```
 
-To retain that choice for later plans, put
+To retain that bootstrap choice for later recreation, put
 `image = "decision-wheel:my-version"` in the ignored `infra\terraform.tfvars`.
 Terraform reads it automatically; command-line `-var` values override it.
 Keep the selected tag consistent with the image loaded into this cluster.
 
+For an existing Deployment, use the gated local Jenkins delivery path;
+Terraform deliberately leaves its image/rollout marker to Jenkins.
 Keep the provider lock file in Git. Terraform state, plans, variable files and
-kubeconfigs are ignored and must remain private. Automated rollout/recovery
-and registry image pulling will be connected in a later step.
+kubeconfigs are ignored and must remain private. Registry image pulling is
+not configured; local delivery preloads images instead.
 
 ### Prometheus, Grafana and local alerts
 
@@ -495,8 +583,9 @@ warning is appropriate; alert history remains visible afterward.
 
 For a real alert, inspect the fixed route/status metrics, application logs
 and recent Jenkins changes before another release. Stop synthetic traffic
-first if running this demonstration. Rollout/rollback automation is a
-separate assignment task; no automatic recovery or CI deployment is claimed.
+first if running this demonstration. Local delivery can recover a failed
+rollout/smoke check, but these monitoring alerts do not trigger deployment,
+rollback or external notifications by themselves.
 
 **Temporary security exception, 18 November 2026:** the owner explicitly
 approved local-only use of Prometheus 3.16.0, Alertmanager 0.35.0 and Grafana
