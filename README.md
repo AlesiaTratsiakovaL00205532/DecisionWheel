@@ -42,8 +42,8 @@ rather than being reported as successful. Health probes are logged too.
 
 The logger does not record questions, answers, raw request/response bodies,
 headers, cookies, credentials, personal information, IP addresses, raw URLs,
-query strings, exception messages or stack traces. Only `/health` and
-`/api/spin` are named; static assets and unknown paths are labelled `other`
+query strings, exception messages or stack traces. Only `/health`,
+`/api/spin` and `/metrics` are named; static assets and unknown paths are labelled `other`
 to avoid storing personal information embedded in paths. This intentionally
 trades detailed exception diagnostics for privacy.
 
@@ -58,8 +58,34 @@ kubectl --kubeconfig "$HOME\.kube\decision-wheel-kind-config" --context kind-dec
 Add `--follow` to stream logs. This uses the private operator kubeconfig, not
 the restricted Jenkins credential, which has no `pods/log` permission.
 Existing Pods keep their previous logging behaviour until the new image is
-deployed. Logs are retained by the container runtime; centralized collection,
-retention policies, dashboards and alerts are separate observability steps.
+deployed. Logs are retained by the container runtime; centralized log
+collection and long-term retention remain separate work. Metrics dashboards
+and local alerts are described below.
+
+## Application metrics
+
+`GET /metrics` returns Prometheus text-format metrics with caching disabled:
+
+| Metric | Meaning |
+| --- | --- |
+| `decision_wheel_http_requests_total` | Completed and interrupted requests |
+| `decision_wheel_http_errors_total` | HTTP 4xx/5xx responses and interrupted requests |
+| `decision_wheel_http_request_duration_seconds` | Latency histogram, including `_bucket`, `_sum` and `_count` |
+
+Latency is a histogram rather than just a counter so Prometheus can calculate
+request rates, average durations and percentiles. Values use seconds.
+Labels are limited to allowlisted HTTP methods, fixed routes
+(`/health`, `/api/spin`, `other`) and HTTP status codes or `aborted`.
+There are no questions, answers, raw paths/queries, client addresses,
+headers, request IDs, exception details or personal-data labels.
+Health probes are included; `/metrics` scrapes are excluded from these
+measurements to avoid counting the monitoring traffic itself.
+Scrapes still produce privacy-safe request logs.
+
+Counters and histograms belong to each app process, reset on restart and
+are scraped independently for both Kubernetes replicas. Prometheus's `rate`
+and `increase` functions account for counter resets. No application database
+or question/answer history is collected.
 
 ## Checks
 
@@ -70,8 +96,9 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The unit/API tests cover wheel landing positions, question validation and
-privacy-preserving request/error logging.
+The unit/API tests cover wheel landing positions, question validation,
+privacy-preserving request/error logging and metrics, interrupted requests,
+scrape exclusion and isolated metric registries.
 They use Node.js's built-in test runner and assertions, with Supertest for the
 HTTP requests. `npm run test:ci` also writes the Jenkins JUnit report to
 `reports/unit-integration.xml`; create `reports` first when running it manually.
@@ -271,8 +298,9 @@ to private: change this
 package's visibility to **Public** if anonymous downloads are required. A
 public repository alone does not make its package public.
 
-Automated Jenkins deployment and observability are later assignment steps;
-publishing an image does not establish that it is vulnerability-free.
+Automated Jenkins deployment remains a later assignment step; local
+observability is described below. Publishing an image does not establish
+that it is vulnerability-free.
 
 ### Current publishing blocker
 
@@ -328,7 +356,19 @@ permissions to the current user and SYSTEM. Never commit or share it, and do
 not give this admin credential to Jenkins. kind nodes require privileged Docker
 access; this is a trusted local development environment only.
 
-Review and apply the application resources:
+The configuration also includes the local monitoring stack described below.
+Its pinned third-party images currently require an explicit, temporary
+security exception. Only if you accept that documented local-lab risk, add
+this line to the ignored `infra\terraform.tfvars`, preserving any existing
+`image` setting:
+
+```hcl
+allow_local_monitoring_security_exception = true
+```
+
+The default is `false`; Terraform refuses to deploy this monitoring stack
+without explicit acceptance. This does not bypass application CI gates.
+Review and apply the resources:
 
 ```powershell
 terraform -chdir=infra init
@@ -381,6 +421,100 @@ Keep the selected tag consistent with the image loaded into this cluster.
 Keep the provider lock file in Git. Terraform state, plans, variable files and
 kubeconfigs are ignored and must remain private. Automated rollout/recovery
 and registry image pulling will be connected in a later step.
+
+### Prometheus, Grafana and local alerts
+
+`infra\monitoring.tf` provisions a separate `decision-wheel-monitoring`
+namespace with Prometheus, Grafana and Alertmanager in one lab-only Pod.
+Images are version- and digest-pinned. The Pod uses Restricted Pod Security,
+UID/GID 1000, read-only roots, dropped capabilities, resource limits and a
+ServiceAccount without API permissions or a mounted token. Writable data
+uses bounded `emptyDir` volumes. Prometheus is configured for six-hour/128 MB
+retention (the 512 MiB data volume also includes its head/WAL files);
+Pod replacement loses metric history, Grafana's local database and silences.
+Configuration and the read-only dashboard are restored from Terraform.
+This is not a persistent or highly available production monitoring system.
+
+A headless app Service and DNS discovery let Prometheus scrape both replicas
+every five seconds without Kubernetes API credentials. Not-ready addresses
+are published so a failing existing Pod can still be detected. Prometheus
+adds infrastructure target addresses, never client addresses, as `instance`.
+The Grafana dashboard shows healthy targets, request totals/rates,
+client/server errors, API p50/p95 latency and firing-alert history.
+
+Open the UIs by leaving this command running in another terminal:
+
+```powershell
+kubectl --kubeconfig "$HOME\.kube\decision-wheel-kind-config" --context kind-decision-wheel --namespace decision-wheel-monitoring port-forward --address 127.0.0.1 service/decision-wheel-monitoring 3003:3000 9090:9090 9093:9093
+```
+
+Grafana: <http://127.0.0.1:3003/d/decision-wheel>.
+Prometheus alerts: <http://127.0.0.1:9090/alerts>.
+Alertmanager: <http://127.0.0.1:9093>.
+Use another free local port if one is occupied; the dashboard's links assume
+9090/9093. Reconnect forwarding after the monitoring Pod is replaced.
+
+Grafana allows anonymous **Viewer-only** access; initial admin creation,
+basic authentication, the login form and sign-up are disabled. No default
+admin account/password is created. Dashboards/datasources are provisioned,
+not editable through this UI. Prometheus and Alertmanager are unauthenticated.
+All Services are ClusterIP; forwards bind only to loopback. Other Pods can
+still reach these services: the default kind CNI does not enforce network
+isolation. Do not expose these HTTP UIs outside a trusted local lab.
+
+Prometheus evaluates these rules every five seconds:
+
+| Alert | Condition | Pending period |
+| --- | --- | --- |
+| `DecisionWheelTargetDown` | A target is down, fewer than two are discovered, or all are absent | 30 seconds |
+| `DecisionWheelRequestErrors` | At least five HTTP 4xx/5xx errors in a rolling minute | 15 seconds |
+| `DecisionWheelHighLatency` | API p95 exceeds 500 ms over two minutes | 1 minute |
+
+Alertmanager receives firing/resolved alerts and displays active alerts.
+Its `local-ui` receiver intentionally has no email, webhook or chat
+integration. Visible local alerts are demonstrated; external notification
+delivery is not implemented or claimed. Error bursts include client
+validation failures, so they are warnings rather than proof of a server fault.
+Thresholds are deliberately short for this small local demonstration.
+
+Run the controlled demonstration from the repository root:
+
+```powershell
+powershell.exe -NoProfile -File .\scripts\test-monitoring.ps1
+```
+
+The script uses its own temporary loopback forwards, checks both scrape
+targets and Grafana's datasource/dashboard, sends twelve synthetic invalid
+requests, observes the warning firing in Prometheus and reaching
+Alertmanager, then waits for natural resolution and checks health.
+Only its own forwarding processes are stopped. Safe summary evidence is
+written to ignored `reports\monitoring-smoke.json`.
+It does not inject a server crash or demonstrate firing the separate
+target-down/high-latency rules. Start this script only when a controlled
+warning is appropriate; alert history remains visible afterward.
+
+For a real alert, inspect the fixed route/status metrics, application logs
+and recent Jenkins changes before another release. Stop synthetic traffic
+first if running this demonstration. Rollout/rollback automation is a
+separate assignment task; no automatic recovery or CI deployment is claimed.
+
+**Temporary security exception, 18 November 2026:** the owner explicitly
+approved local-only use of Prometheus 3.16.0, Alertmanager 0.35.0 and Grafana
+13.3.1 despite recorded HIGH findings. Prometheus/Alertmanager include
+`golang.org/x/net` 0.61.0, affected by CVE-2026-78661 (fixed in 0.62.0).
+Grafana also contains vulnerable bundled Go components, including older
+stdlib and Tempo dependencies. Stable maintenance releases checked did not
+resolve the shared finding; checked hardened alternatives required registry
+access unavailable in this lab. Do not describe these images as clean.
+Full local results are retained in ignored
+`reports\metrics-prometheus-trivy.json`,
+`reports\metrics-alertmanager-trivy.json` and
+`reports\metrics-grafana-trivy.json`.
+Re-scan and replace the pinned images with fixed releases, remove this
+exception when clean, and do not carry it into a shared/production deployment.
+The application's dependency and image scans still block HIGH/CRITICAL
+findings, including unfixed ones; Jenkins thresholds and publishing gates
+are unchanged. GHCR publication remains independently blocked.
 
 ### Restricted Jenkins Kubernetes access
 

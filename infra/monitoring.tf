@@ -25,7 +25,7 @@ locals {
         rules = [
           {
             alert       = "DecisionWheelTargetDown"
-            expr        = "up{job=\"decision-wheel\"} == 0 or absent(up{job=\"decision-wheel\"})"
+            expr        = "up{job=\"decision-wheel\"} == 0 or count(up{job=\"decision-wheel\"}) < 2 or absent(up{job=\"decision-wheel\"})"
             for         = "30s"
             labels      = { severity = "critical" }
             annotations = { summary = "A DecisionWheel metrics target is unavailable." }
@@ -184,6 +184,13 @@ resource "kubernetes_config_map_v1" "monitoring" {
 }
 
 resource "kubernetes_deployment_v1" "monitoring" {
+  lifecycle {
+    precondition {
+      condition     = var.allow_local_monitoring_security_exception
+      error_message = "The pinned monitoring images have documented HIGH vulnerabilities. Read the README and explicitly approve local-only use with allow_local_monitoring_security_exception; application CI gates must remain unchanged."
+    }
+  }
+
   metadata {
     name      = local.monitoring_name
     namespace = kubernetes_namespace_v1.monitoring.metadata[0].name
@@ -199,8 +206,11 @@ resource "kubernetes_deployment_v1" "monitoring" {
     }
     template {
       metadata {
-        labels      = local.monitoring_labels
-        annotations = { "config-checksum" = sha256(jsonencode(local.monitoring_config)) }
+        labels = local.monitoring_labels
+        annotations = {
+          "config-checksum"                         = sha256(jsonencode(local.monitoring_config))
+          "decision-wheel.local/security-exception" = "Owner-approved temporary local monitoring only; application CI gates unchanged."
+        }
       }
       spec {
         service_account_name            = kubernetes_service_account_v1.monitoring.metadata[0].name
