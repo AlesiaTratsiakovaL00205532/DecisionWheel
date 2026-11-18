@@ -158,8 +158,15 @@ fail the build rather than being treated as a clean scan. In Jenkins, download
 `reports/npm-audit.json` and `reports/trivy.json` from the build artifacts;
 available reports are retained even when a gate fails. A failed dependency
 audit stops later stages, so there will be no image report from that run.
-If the registry returns HTTP 429, respect its `Retry-After` delay before
-rerunning the build; rate limiting is not a clean vulnerability scan.
+The audit script makes at most two attempts. Only HTTP 429 triggers a retry:
+it honours `Retry-After` seconds or an HTTP date, using 60 seconds when the
+header is absent. Invalid delays fail the build; delays above 20 minutes
+also fail rather than retrying earlier than requested. The pipeline timeout
+is 30 minutes to accommodate one wait plus the other stages. Vulnerabilities,
+other audit failures and a second rate-limited response still fail the build.
+Each attempt is retained as `reports/npm-audit-attempt-<number>.json`, alongside
+the latest `reports/npm-audit.json`. This cannot remove the registry's quota;
+if both attempts are throttled, respect the latest response before rebuilding.
 
 Trivy runs in a disposable container; no Windows Trivy installation is needed.
 The pipeline exports the local image to a temporary tar file, scans that file
@@ -179,7 +186,7 @@ These checks do not prove the image is free of vulnerabilities.
 To run the dependency gate locally:
 
 ```powershell
-npm audit --include=dev --audit-level=high --registry=https://packagefeedproxy.microsoft.io/npm/
+.\scripts\audit-dependencies.ps1
 ```
 
 ### Docker access and GHCR credentials
