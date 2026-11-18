@@ -2,10 +2,12 @@ import { randomInt } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { ANSWERS, MAX_QUESTION_LENGTH } from '../public/wheel.js';
+import { requestLogger, writeLog } from './logging.js';
 
-export function createApp({ chooseIndex = randomInt } = {}) {
+export function createApp({ chooseIndex = randomInt, log = writeLog } = {}) {
   const app = express();
   app.disable('x-powered-by');
+  app.use(requestLogger(log));
   app.use(express.json({ limit: '4kb' }));
 
   app.get('/health', (_request, response) => {
@@ -32,6 +34,9 @@ export function createApp({ chooseIndex = randomInt } = {}) {
   app.use(express.static(fileURLToPath(new URL('../public/', import.meta.url))));
 
   app.use((error, _request, response, _next) => {
+    if (response.headersSent) {
+      return response.destroy();
+    }
     if (error.type === 'entity.parse.failed') {
       return response.status(400).json({ error: 'Send a valid JSON question.' });
     }
