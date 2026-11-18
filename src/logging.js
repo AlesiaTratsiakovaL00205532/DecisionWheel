@@ -11,7 +11,7 @@ export function requestLogger(log = writeLog) {
     const started = process.hrtime.bigint();
     const requestId = randomUUID();
     const method = METHODS.has(request.method) ? request.method : 'OTHER';
-    const route = request.path === '/api/spin' || request.path === '/health' ? request.path : 'other';
+    const route = ['/api/spin', '/health', '/metrics'].includes(request.path) ? request.path : 'other';
     let logged = false;
     response.set('X-Request-ID', requestId);
 

@@ -3,12 +3,22 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { ANSWERS, MAX_QUESTION_LENGTH } from '../public/wheel.js';
 import { requestLogger, writeLog } from './logging.js';
+import { createMetrics } from './metrics.js';
 
 export function createApp({ chooseIndex = randomInt, log = writeLog } = {}) {
   const app = express();
+  const metrics = createMetrics();
   app.disable('x-powered-by');
-  app.use(requestLogger(log));
+  app.use(requestLogger((entry) => {
+    metrics.observe(entry);
+    log(entry);
+  }));
   app.use(express.json({ limit: '4kb' }));
+
+  app.get('/metrics', async (_request, response) => {
+    response.set('Cache-Control', 'no-store');
+    response.type(metrics.registry.contentType).send(await metrics.registry.metrics());
+  });
 
   app.get('/health', (_request, response) => {
     response.json({ status: 'ok' });
