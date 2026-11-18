@@ -24,6 +24,43 @@ browser's standard leave/refresh confirmation. Browsers control the wording and
 whether it appears; some mobile browsers may not show it. Questions are sent to
 the answer endpoint for validation but are not saved or logged by the application.
 
+## Application logs
+
+The server writes newline-delimited JSON to standard output, including startup
+and listen-failure events. Each Express request produces one `http_request`
+record on completion or interruption. Records contain a UTC timestamp,
+severity, a server-generated request ID, an allowlisted HTTP method, a fixed
+route label, response status, duration in milliseconds and completion outcome.
+The same request ID is returned in `X-Request-ID`; client-supplied IDs are
+not reused.
+
+Successful requests are `info`, HTTP 4xx/interrupted requests are `warn`,
+and HTTP 5xx are `error`. Failures use fixed codes such as `bad_request`,
+`not_found`, `payload_too_large` and `internal_error`, not exception details.
+Interrupted responses have `status: null` and `error_code: request_aborted`
+rather than being reported as successful. Health probes are logged too.
+
+The logger does not record questions, answers, raw request/response bodies,
+headers, cookies, credentials, personal information, IP addresses, raw URLs,
+query strings, exception messages or stack traces. Only `/health` and
+`/api/spin` are named; static assets and unknown paths are labelled `other`
+to avoid storing personal information embedded in paths. This intentionally
+trades detailed exception diagnostics for privacy.
+
+View logs in the `npm start` terminal or with `docker logs decision-wheel`.
+After deploying an image containing this logging change, retrieve both
+Kubernetes replicas' logs as the local cluster operator:
+
+```powershell
+kubectl --kubeconfig "$HOME\.kube\decision-wheel-kind-config" --context kind-decision-wheel --namespace decision-wheel logs --selector=app.kubernetes.io/name=decision-wheel --all-containers=true --since=10m --tail=100
+```
+
+Add `--follow` to stream logs. This uses the private operator kubeconfig, not
+the restricted Jenkins credential, which has no `pods/log` permission.
+Existing Pods keep their previous logging behaviour until the new image is
+deployed. Logs are retained by the container runtime; centralized collection,
+retention policies, dashboards and alerts are separate observability steps.
+
 ## Checks
 
 ```powershell
@@ -33,7 +70,8 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The unit/API tests cover wheel landing positions and question validation.
+The unit/API tests cover wheel landing positions, question validation and
+privacy-preserving request/error logging.
 They use Node.js's built-in test runner and assertions, with Supertest for the
 HTTP requests. `npm run test:ci` also writes the Jenkins JUnit report to
 `reports/unit-integration.xml`; create `reports` first when running it manually.
