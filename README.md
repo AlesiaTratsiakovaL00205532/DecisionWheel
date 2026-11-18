@@ -226,5 +226,89 @@ to private: change this
 package's visibility to **Public** if anonymous downloads are required. A
 public repository alone does not make its package public.
 
-Deployment and observability are later assignment
-steps; publishing an image does not establish that it is vulnerability-free.
+Automated Jenkins deployment and observability are later assignment steps;
+publishing an image does not establish that it is vulnerability-free.
+
+## Local Kubernetes with kind and Terraform
+
+This Windows lab uses kind 0.33.0, Docker Desktop's Linux engine, kubectl 1.36
+and Terraform 1.7 or newer (below 2.0). `infra\kind.yaml` pins a Kubernetes
+1.36.4 node image by digest. It creates a separate, single-node
+`decision-wheel` cluster, not a production/high-availability cluster.
+The cluster API binds only to `127.0.0.1`; there are no application host-port
+mappings. No cloud account, GHCR login or changes to `jenkins1` are needed.
+
+Install the missing kind CLI if necessary:
+
+```powershell
+winget install --id Kubernetes.kind --exact --version 0.33.0 --source winget
+```
+
+From the repository root, build an image and create/load the cluster:
+
+```powershell
+docker build --pull --tag decision-wheel:remediation .
+.\infra\setup-kind.ps1
+```
+
+The script preserves the default kubeconfig and any existing clusters.
+It writes a dedicated admin kubeconfig to
+`$HOME\.kube\decision-wheel-kind-config`, restricting its Windows file
+permissions to the current user and SYSTEM. Never commit or share it, and do
+not give this admin credential to Jenkins. kind nodes require privileged Docker
+access; this is a trusted local development environment only.
+
+Review and apply the application resources:
+
+```powershell
+terraform -chdir=infra init
+terraform -chdir=infra fmt -check
+terraform -chdir=infra validate
+terraform -chdir=infra plan
+terraform -chdir=infra apply
+```
+
+Terraform manages a dedicated namespace, service account, two-replica
+Deployment and ClusterIP Service. The namespace enforces Kubernetes's
+Restricted Pod Security profile. Application containers run as UID/GID 1000,
+drop all Linux capabilities, prohibit privilege escalation, use the default
+seccomp profile and have read-only root filesystems. CPU/memory requests and
+limits are set. No API token is mounted, and the application service account
+has no RoleBindings granting Kubernetes resource access.
+
+Startup, readiness and liveness probes call `/health` on port 3000.
+Startup allows up to about 60 seconds; readiness controls Service endpoints;
+three consecutive liveness failures trigger a container restart. Rolling
+updates keep existing ready replicas while replacements start.
+
+To access the app, run this in another terminal and leave it running:
+
+```powershell
+kubectl --kubeconfig "$HOME\.kube\decision-wheel-kind-config" --context kind-decision-wheel --namespace decision-wheel port-forward --address 127.0.0.1 service/decision-wheel 3002:80
+```
+
+Open <http://127.0.0.1:3002>. Stop forwarding with Ctrl+C; the pods keep running.
+The app remains unauthenticated by design and is accessible to local users.
+The Service is internal to Kubernetes, but this is **not** inter-pod network
+isolation: kind's default CNI does not enforce NetworkPolicy. Enforced network
+policies would require an appropriate CNI. No such isolation is claimed here.
+
+The initial image uses `imagePullPolicy: Never`, so only an explicitly loaded
+local image can run. For a different image, use a distinct tag and pass the
+same value to setup and Terraform:
+
+```powershell
+.\infra\setup-kind.ps1 -Image decision-wheel:my-version
+terraform -chdir=infra plan -var="image=decision-wheel:my-version"
+terraform -chdir=infra apply -var="image=decision-wheel:my-version"
+```
+
+Keep the provider lock file in Git. Terraform state, plans, variable files and
+kubeconfigs are ignored and must remain private. Application image publishing,
+least-privilege Jenkins deployment credentials and automated rollout/recovery
+will be connected in later steps.
+
+To remove only this lab, first run `terraform -chdir=infra destroy` with the
+same image variables if used, then
+`kind delete cluster --name decision-wheel --kubeconfig "$HOME\.kube\decision-wheel-kind-config"`.
+Do not delete unrelated Docker containers or clusters.
