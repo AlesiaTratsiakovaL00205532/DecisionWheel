@@ -20,7 +20,6 @@ pipeline {
         DOCKER_ENDPOINT = 'npipe:////./pipe/dockerDesktopLinuxEngine'
         KUBECTL_CLI = 'C:\\Users\\atratsiakova\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
         KIND_CLI = 'C:\\Users\\atratsiakova\\AppData\\Local\\Microsoft\\WinGet\\Links\\kind.exe'
-        IMAGE_NAME = 'ghcr.io/alesiatratsiakoval00205532/decision-wheel'
         TRIVY_IMAGE = 'aquasec/trivy:0.76.2'
     }
 
