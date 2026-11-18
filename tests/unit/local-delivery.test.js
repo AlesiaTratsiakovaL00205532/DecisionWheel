@@ -13,6 +13,8 @@ const deployScript = fileURLToPath(new URL('../../scripts/deploy-local.ps1', imp
 const loadScript = fileURLToPath(new URL('../../scripts/load-local-image.ps1', import.meta.url));
 const harness = String.raw`
 $ErrorActionPreference = 'Stop'
+$originalPath = $env:PATH
+$dockerDirectory = Join-Path (Split-Path -Parent $env:DELIVERY_FIXTURE) 'docker-tools'
 $global:deliveryTestState = @{
     fixture = (Get-Content -LiteralPath $env:DELIVERY_FIXTURE -Raw | ConvertFrom-Json)
     patches = 0
@@ -131,11 +133,24 @@ function docker {
     $revision = if ($s.fixture.scenario -eq 'wrong-revision') {'b'*40} else {$env:DELIVERY_COMMIT}
     return (,@{Id='sha256:fixture';Config=@{Labels=@{'org.opencontainers.image.revision'=$revision}}} | ConvertTo-Json -Depth 10 -Compress)
 }
+function Get-Command {
+    [CmdletBinding()]
+    param([string]$Name)
+    if ($Name -eq 'docker' -and $global:deliveryTestState.fixture.scenario -like 'docker-path*') {
+        return [pscustomobject]@{CommandType='Application';Source=(Join-Path $dockerDirectory 'docker.exe')}
+    }
+    Microsoft.PowerShell.Core\Get-Command @PSBoundParameters
+}
 function kind {
     $global:LASTEXITCODE = 0
+    if ($global:deliveryTestState.fixture.scenario -like 'docker-path*' -and
+        ($env:PATH -split [IO.Path]::PathSeparator)[0] -cne $dockerDirectory) {
+        $global:LASTEXITCODE = 1
+        return
+    }
     if ($args -contains 'get') { return 'decision-wheel-control-plane' }
     Add-Content -LiteralPath $env:DELIVERY_PATCHES -Value 'loaded'
-    if ($global:deliveryTestState.fixture.scenario -eq 'load-failure') { $global:LASTEXITCODE = 1 }
+    if ($global:deliveryTestState.fixture.scenario -in @('load-failure','docker-path-failure')) { $global:LASTEXITCODE = 1 }
 }
 try {
     if ($env:DELIVERY_KIND -eq 'load') {
@@ -147,6 +162,8 @@ try {
 } catch {
     Write-Output ('HARNESS_FAILURE=' + $_.Exception.Message)
     exit 1
+} finally {
+    if ($env:PATH -cne $originalPath) { throw 'PATH-RESTORATION-FAILED' }
 }
 `;
 
@@ -234,6 +251,8 @@ for (const scenario of [
 
 for (const scenario of [
   { name: 'loads only into the verified existing kind cluster', id: 'success', status: 0, loaded: true },
+  { name: 'makes the configured Docker executable discoverable to kind', id: 'docker-path', status: 0, loaded: true },
+  { name: 'restores PATH after an image import failure', id: 'docker-path-failure', status: 1, loaded: true },
   { name: 'rejects an image from a different revision', id: 'wrong-revision', status: 1, loaded: false },
   { name: 'rejects nodes from another cluster', id: 'wrong-cluster', status: 1, loaded: false },
   { name: 'fails closed when the image import fails', id: 'load-failure', status: 1, loaded: true },
@@ -241,6 +260,7 @@ for (const scenario of [
   it(`local image loader ${scenario.name}`, { skip: process.platform !== 'win32' }, (t) => {
     const actual = run(t, scenario.id, 'load');
     assert.equal(actual.result.status, scenario.status, actual.result.stderr || actual.result.stdout);
+    assert.ok(!(actual.result.stderr + actual.result.stdout).includes('PATH-RESTORATION-FAILED'));
     assert.equal(actual.patches.length > 0, scenario.loaded);
     if (scenario.status === 0) {
       assert.equal(actual.report.source_commit, commit);
