@@ -311,9 +311,65 @@ terraform -chdir=infra apply -var="image=decision-wheel:my-version"
 ```
 
 Keep the provider lock file in Git. Terraform state, plans, variable files and
-kubeconfigs are ignored and must remain private. Application image publishing,
-least-privilege Jenkins deployment credentials and automated rollout/recovery
-will be connected in later steps.
+kubeconfigs are ignored and must remain private. Automated rollout/recovery
+and registry image pulling will be connected in a later step.
+
+### Restricted Jenkins Kubernetes access
+
+`infra\jenkins-access.tf` creates a separate `jenkins-deployer` ServiceAccount,
+Role and RoleBinding in `decision-wheel`. It can read/watch/patch only the
+named DecisionWheel Deployment, get its Service, inspect namespace Pods and
+open Pod port forwards for HTTP health checks. Both get and create are granted
+on `pods/portforward` for WebSocket/SPDY clients. It cannot read Secrets, exec
+into Pods, create RoleBindings or access Pods in other namespaces. The app
+continues to use its original unprivileged ServiceAccount.
+Deployment list/watch requests must select `metadata.name=decision-wheel`,
+as rollout monitoring does; unrestricted Deployment listing is not granted.
+
+These are namespace/RBAC restrictions, not image-field-only authorization:
+patch access can modify the named Deployment's other fields, and forwarding
+can reach any Pod port in this dedicated namespace. The Restricted Pod
+Security policy still applies. Jenkins's existing LocalSystem and Docker
+privileges are not reduced by this Kubernetes identity.
+
+Apply the Terraform changes using the commands above. Tokens are deliberately
+not Terraform resources, so this change does not put a Jenkins token in
+Terraform state. Generate a short-lived credential locally:
+
+```powershell
+.\infra\new-jenkins-kubeconfig.ps1
+```
+
+The script requests a two-hour token and prints its actual expiry and file
+location, never the token. It creates a unique directory outside Git under
+`$HOME\.kube`, restricted to the current user and SYSTEM. The kubeconfig
+contains the trusted cluster certificate and only the Jenkins identity;
+TLS verification remains enabled. Do not upload the admin kubeconfig.
+
+In Jenkins, go to **Manage Jenkins > Credentials > System > Global
+credentials > Add Credentials**. Choose **Secret file**, upload the generated
+`kubeconfig.json`, and set the ID to `decision-wheel-kubeconfig`. Configure
+this before merging the pipeline change: a missing credential fails the build.
+
+To check the generated credential locally, substitute its printed path:
+
+```powershell
+.\scripts\check-kubernetes-access.ps1 -Kubeconfig 'C:\path\to\kubeconfig.json'
+```
+
+The read-only **Check Kubernetes access** stage runs before the dependency
+audit, so audit throttling or a later GHCR failure does not hide its result.
+It binds the Secret file only for that stage, verifies the exact
+ServiceAccount identity, required permissions, selected forbidden permissions
+and actual reads of the Deployment/Service. Connection/authentication errors
+are failures, not successful denials. It never deploys or changes resources.
+Do not archive or print kubeconfigs or place them in the repository.
+
+After uploading and checking the credential, delete only the generated local
+`kubeconfig.json` and its now-empty directory. Jenkins retains its credential
+copy. Before expiry, rerun the generator and replace the existing credential's
+file. Renewal is manual in this local lab; there is no non-expiring token or
+automatic renewal. Deleting the ServiceAccount revokes its bound tokens.
 
 To remove only this lab, first run `terraform -chdir=infra destroy` with the
 same image variables if used, then
