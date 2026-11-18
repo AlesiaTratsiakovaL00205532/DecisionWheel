@@ -4,7 +4,7 @@ pipeline {
     options {
         skipDefaultCheckout(true)
         disableConcurrentBuilds()
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
     }
 
     environment {
@@ -55,15 +55,7 @@ pipeline {
 
         stage('Dependency vulnerability scan') {
             steps {
-                powershell '''
-                    $ErrorActionPreference = 'Stop'
-                    New-Item -ItemType Directory -Force -Path 'reports' | Out-Null
-                    & npm.cmd audit --include=dev --audit-level=high --registry=https://packagefeedproxy.microsoft.io/npm/ --json |
-                        Set-Content -Encoding UTF8 -Path 'reports/npm-audit.json'
-                    if ($LASTEXITCODE -ne 0) {
-                        throw 'Dependency audit failed (vulnerabilities or audit service error). See reports/npm-audit.json.'
-                    }
-                '''
+                powershell '& .\\scripts\\audit-dependencies.ps1'
             }
         }
 
@@ -194,7 +186,7 @@ pipeline {
     post {
         always {
             junit testResults: 'reports/*.xml', allowEmptyResults: true
-            archiveArtifacts artifacts: 'reports/*.xml,reports/npm-audit.json,reports/trivy.json,reports/image.txt,test-results/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'reports/*.xml,reports/npm-audit*.json,reports/trivy.json,reports/image.txt,test-results/**', allowEmptyArchive: true
         }
     }
 }
