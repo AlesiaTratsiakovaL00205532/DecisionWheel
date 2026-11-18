@@ -274,6 +274,31 @@ public repository alone does not make its package public.
 Automated Jenkins deployment and observability are later assignment steps;
 publishing an image does not establish that it is vulnerability-free.
 
+### Current publishing blocker
+
+On 18 November 2026, Jenkins build #18 passed Kubernetes access checks,
+dependency auditing, application/browser tests, image building and container
+scanning, but Docker's GHCR login failed with `denied: denied`.
+No successful image push or package availability has been verified.
+
+A separate diagnostic used the same in-memory classic PAT for both paths:
+Windows authentication returned HTTP 200 for GitHub account/scope checks,
+GHCR token requests and authenticated `/v2/`; a disposable container using
+Docker's configured proxy received HTTP 403 with registry code `DENIED` at
+GHCR's unscoped `/token` endpoint. Unauthenticated proxy CONNECT and verified
+TLS connectivity worked. A subsequent Windows-native `regctl` login also
+reported registry denial, despite a successful anonymous GHCR manifest read.
+The failure is therefore not isolated to Docker's proxy path. The exact
+request/authorization difference is unresolved; these results do not prove
+an administrator policy or a faulty PAT.
+
+Publishing remains blocked; further authentication experiments are parked
+while independent assignment work continues.
+Do not disable TLS, bypass access controls or restart shared Docker workloads.
+Local builds, scans and the isolated kind deployment can support further
+assignment work, but are not evidence of registry publication or a successful
+end-to-end delivery pipeline.
+
 ## Local Kubernetes with kind and Terraform
 
 This Windows lab uses kind 0.33.0, Docker Desktop's Linux engine, kubectl 1.36
@@ -347,6 +372,11 @@ same value to setup and Terraform:
 terraform -chdir=infra plan -var="image=decision-wheel:my-version"
 terraform -chdir=infra apply -var="image=decision-wheel:my-version"
 ```
+
+To retain that choice for later plans, put
+`image = "decision-wheel:my-version"` in the ignored `infra\terraform.tfvars`.
+Terraform reads it automatically; command-line `-var` values override it.
+Keep the selected tag consistent with the image loaded into this cluster.
 
 Keep the provider lock file in Git. Terraform state, plans, variable files and
 kubeconfigs are ignored and must remain private. Automated rollout/recovery
