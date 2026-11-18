@@ -317,6 +317,9 @@ alongside the explicit Docker Linux-engine endpoint. The Jenkins service
 account must be able to execute these tools. Loading images uses its existing,
 privileged Docker access, not an administrator Kubernetes credential.
 No cluster is created, deleted or reset by the delivery scripts.
+The loader temporarily adds the configured Docker executable's directory to
+its process `PATH`, because kind launches `docker` by name. It restores the
+original `PATH` afterward; no machine settings or service restart are needed.
 
 After merging, use **Build with Parameters > DELIVERY_TARGET > local-kind**.
 SCM-triggered builds use the default local mode. Refresh the expiring

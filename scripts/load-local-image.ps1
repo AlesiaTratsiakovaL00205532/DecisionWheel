@@ -15,7 +15,8 @@ $ErrorActionPreference = 'Stop'
 if ($Image -cne "decision-wheel:sha-$SourceCommit") {
     throw 'The local image must match the checked-out source commit.'
 }
-Get-Command $Docker, $Kind -ErrorAction Stop | Out-Null
+$dockerCommand = Get-Command $Docker -ErrorAction Stop
+Get-Command $Kind -ErrorAction Stop | Out-Null
 $engine = @('--host', $DockerEndpoint)
 $metadata = & $Docker @engine image inspect $Image | ConvertFrom-Json
 if ($LASTEXITCODE -ne 0 -or @($metadata).Count -ne 1) { throw 'The tested local image is missing.' }
@@ -25,9 +26,13 @@ if ($metadata.Config.Labels.'org.opencontainers.image.revision' -cne $SourceComm
 }
 $previousHost = $env:DOCKER_HOST
 $previousProvider = $env:KIND_EXPERIMENTAL_PROVIDER
+$previousPath = $env:PATH
 try {
     $env:DOCKER_HOST = $DockerEndpoint
     $env:KIND_EXPERIMENTAL_PROVIDER = 'docker'
+    if ($dockerCommand.CommandType -eq 'Application') {
+        $env:PATH = (Split-Path -Parent $dockerCommand.Source) + [IO.Path]::PathSeparator + $previousPath
+    }
     $preference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue'
@@ -70,4 +75,5 @@ try {
 } finally {
     $env:DOCKER_HOST = $previousHost
     $env:KIND_EXPERIMENTAL_PROVIDER = $previousProvider
+    $env:PATH = $previousPath
 }
