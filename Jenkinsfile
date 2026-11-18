@@ -13,6 +13,7 @@ pipeline {
         PLAYWRIGHT_JUNIT_OUTPUT_FILE = 'reports/browser.xml'
         DOCKER_CLI = 'C:\\Users\\atratsiakova\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         DOCKER_ENDPOINT = 'npipe:////./pipe/dockerDesktopLinuxEngine'
+        KUBECTL_CLI = 'C:\\Users\\atratsiakova\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\kubectl.exe'
         IMAGE_NAME = 'ghcr.io/alesiatratsiakoval00205532/decision-wheel'
         TRIVY_IMAGE = 'aquasec/trivy:0.76.2'
     }
@@ -50,6 +51,17 @@ pipeline {
         stage('Static analysis') {
             steps {
                 bat 'call npm.cmd run lint'
+            }
+        }
+
+        stage('Check Kubernetes access') {
+            steps {
+                withCredentials([file(
+                    credentialsId: 'decision-wheel-kubeconfig',
+                    variable: 'KUBECONFIG'
+                )]) {
+                    powershell '& .\\scripts\\check-kubernetes-access.ps1 -Kubectl $env:KUBECTL_CLI'
+                }
             }
         }
 
