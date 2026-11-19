@@ -1,0 +1,188 @@
+Source: #21.txt (Jenkins console export).
+Sanitized copy: initiating user, user-profile paths, email addresses and audit-proxy hostname are redacted where present.
+No missing stages or results have been added. Original export retained separately.
+
+Started by user [REDACTED]
+Obtained Jenkinsfile from git https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 45 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git.exe rev-parse --resolve-git-dir C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\.git # timeout=10
+Fetching changes from the remote Git repository
+ > git.exe config remote.origin.url https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git # timeout=10
+Fetching upstream changes from https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+ > git.exe --version # timeout=10
+ > git --version # 'git version 2.56.1.vfs.0.1'
+ > git.exe fetch --tags --force --progress -- https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git.exe rev-parse "refs/remotes/origin/main^{commit}" # timeout=10
+Checking out Revision 9a451e02d459dab7ec1f78e654c14bfb6b890717 (refs/remotes/origin/main)
+ > git.exe config core.sparsecheckout # timeout=10
+ > git.exe checkout -f 9a451e02d459dab7ec1f78e654c14bfb6b890717 # timeout=10
+Commit message: "Merge pull request #14 from AlesiaTratsiakovaL00205532/atratsiakova/automatic-deployment"
+ > git.exe rev-list --no-walk b598768d286b714e6ccaaa7b2911dfcec489f5ce # timeout=10
+[Pipeline] echo
+Checked out origin/main at 9a451e02d459dab7ec1f78e654c14bfb6b890717
+[Pipeline] echo
+Delivery target: local-kind. Local delivery does not publish to a registry.
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\reports
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\test-results
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>node --version 
+v26.13.1
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd --version 
+11.20.0
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd ci --no-fund --no-audit 
+
+added 170 packages in 15s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run lint 
+
+> decision-wheel@1.0.0 lint
+> eslint . --max-warnings=0
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Check Kubernetes access)
+[Pipeline] withCredentials
+Masking supported pattern matches of %KUBECONFIG%
+[Pipeline] {
+[Pipeline] powershell
+powershell.exe : error: You must be logged in to the server (Unauthorized)
+At C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel@tmp\durable-583ae349\powershellWrapper.ps1:3 char:1
++ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (error: You must... (Unauthorized):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Kubernetes authentication failed. Check connectivity and renew the expiring Jenkins credential.
+At C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\scripts\check-kubernetes-access.ps1:13 char:5
++     throw 'Kubernetes authentication failed. Check connectivity and r ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Kubernetes auth...ins credential.:String) [], RuntimeException
+    + FullyQualifiedErrorId : Kubernetes authentication failed. Check connectivity and renew the expiring Jenkins cred 
+   ential.
+ 
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency vulnerability scan)
+Stage "Dependency vulnerability scan" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit and integration tests)
+Stage "Unit and integration tests" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install browser runtime)
+Stage "Install browser runtime" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Browser tests)
+Stage "Browser tests" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Check Docker access)
+Stage "Check Docker access" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Docker image)
+Stage "Build Docker image" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Container vulnerability scan)
+Stage "Container vulnerability scan" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Load local image)
+Stage "Load local image" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy locally and verify)
+Stage "Deploy locally and verify" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish to GHCR)
+Stage "Publish to GHCR" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+Recording test results
+No test report files were found. Configuration error?
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE

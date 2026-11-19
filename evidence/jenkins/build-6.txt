@@ -1,0 +1,151 @@
+Source: #6.txt (Jenkins console export).
+Sanitized copy: initiating user, user-profile paths, email addresses and audit-proxy hostname are redacted where present.
+No missing stages or results have been added. Original export retained separately.
+
+Started by an SCM change
+Obtained Jenkinsfile from git https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 20 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git.exe rev-parse --resolve-git-dir C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\.git # timeout=10
+Fetching changes from the remote Git repository
+ > git.exe config remote.origin.url https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git # timeout=10
+Fetching upstream changes from https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+ > git.exe --version # timeout=10
+ > git --version # 'git version 2.56.1.vfs.0.1'
+ > git.exe fetch --tags --force --progress -- https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git.exe rev-parse "refs/remotes/origin/main^{commit}" # timeout=10
+Checking out Revision e506192d5134926cda86a0886a7a226d0de72a35 (refs/remotes/origin/main)
+ > git.exe config core.sparsecheckout # timeout=10
+ > git.exe checkout -f e506192d5134926cda86a0886a7a226d0de72a35 # timeout=10
+Commit message: "Merge pull request #3 from AlesiaTratsiakovaL00205532/atratsiakova/linter"
+ > git.exe rev-list --no-walk 19283ec2d4631fbe52574997f6010e88a540ee20 # timeout=10
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\reports
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\test-results
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>node --version 
+v26.13.1
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd --version 
+11.20.0
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd ci --no-fund --no-audit 
+
+added 208 packages in 17s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run lint 
+
+> decision-wheel@1.0.0 lint
+> eslint . --max-warnings=0
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit and integration tests)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd test -- --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml 
+
+> decision-wheel@1.0.0 test
+> vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/ProgramData/Jenkins/.jenkins/workspace/DecisionWheel[39m
+
+ [32m✓[39m tests/unit/wheel.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/integration/app.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 123[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m20 passed[39m[22m[90m (20)[39m
+[2m   Start at [22m 11:51:28
+[2m   Duration [22m 774ms[2m (transform 76ms, setup 0ms, import 439ms, tests 128ms, environment 0ms)[22m
+
+JUNIT report written to C:/ProgramData/Jenkins/.jenkins/workspace/DecisionWheel/reports/unit-integration.xml
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install browser runtime)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npx.cmd playwright install chromium 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Browser tests)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run test:browser -- --reporter=line,junit 
+
+> decision-wheel@1.0.0 test:browser
+> playwright test --reporter=line,junit
+
+
+Running 13 tests using 1 worker
+
+[1/13] tests\browser\wheel.spec.js:3:1 › spins to the chosen answer, preserves history on cancelled refresh, and clears on confirmed refresh
+[2/13] tests\browser\wheel.spec.js:34:1 › keeps questions as text, handles repeated spins, and puts the newest entry first
+[3/13] tests\browser\wheel.spec.js:49:1 › rejects whitespace and recovers after a network error without adding history
+[4/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 320x800 screen
+[5/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 360x800 screen
+[6/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 390x844 screen
+[7/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 768x1024 screen
+[8/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1280x600 screen
+[9/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1280x720 screen
+[10/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1366x768 screen
+[11/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1920x1080 screen
+[12/13] tests\browser\wheel.spec.js:74:1 › points the top of each label toward its outer wheel edge
+[13/13] tests\browser\wheel.spec.js:91:1 › allows the page to grow when question history becomes long
+  13 passed (15.6s)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

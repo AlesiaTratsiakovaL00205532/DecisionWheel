@@ -1,0 +1,12 @@
+{
+    "timestamp":  "2026-11-18T16:24:55.6381996Z",
+    "mode":  "local-kind",
+    "registry_published":  false,
+    "source_commit":  "0f0366e028b5b9f0605dbe80235586e9c9224e72",
+    "candidate_image":  "decision-wheel:sha-0f0366e028b5b9f0605dbe80235586e9c9224e72",
+    "previous_image":  "decision-wheel:sha-b598768d286b714e6ccaaa7b2911dfcec489f5ce",
+    "result":  "deployed",
+    "failure_phase":  null,
+    "recovery":  "not_required",
+    "verified_replicas":  2
+}

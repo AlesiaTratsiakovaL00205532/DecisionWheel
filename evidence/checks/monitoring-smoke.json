@@ -1,0 +1,16 @@
+﻿{
+    "timestamp":  "2026-11-18T13:33:00.6663797Z",
+    "healthy_scrape_targets":  2,
+    "grafana_dashboard_provisioned":  true,
+    "grafana_admin_api_denied":  true,
+    "grafana_datasource_query_succeeded":  true,
+    "synthetic_error_responses":  12,
+    "api_p95_seconds":  0.0047589076990263834,
+    "alert":  "DecisionWheelRequestErrors",
+    "fired_at":  "2026-11-18T13:32:20.5047717Z",
+    "alertmanager_received":  true,
+    "resolved":  true,
+    "application_healthy_afterward":  true,
+    "notification_scope":  "Local dashboards and Alertmanager UI only; no external notification delivery.",
+    "monitoring_security":  "Owner-approved temporary exception for third-party monitoring images only; application CI gates unchanged."
+}

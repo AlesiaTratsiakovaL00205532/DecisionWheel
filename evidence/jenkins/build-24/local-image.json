@@ -1,0 +1,12 @@
+{
+    "timestamp":  "2026-11-18T16:24:52.3395761Z",
+    "mode":  "local-kind",
+    "cluster":  "decision-wheel",
+    "image":  "decision-wheel:sha-0f0366e028b5b9f0605dbe80235586e9c9224e72",
+    "docker_image_id":  "sha256:b9fe12ff706fa91185e5d75337fd595ef02e097d7112d9f2842ec4bc672d74e5",
+    "source_commit":  "0f0366e028b5b9f0605dbe80235586e9c9224e72",
+    "nodes":  [
+                  "decision-wheel-control-plane"
+              ],
+    "registry_published":  false
+}

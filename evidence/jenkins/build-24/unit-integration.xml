@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reviewed Jenkins build #24 copy: agent hostname and absolute workspace prefixes redacted; test outcomes unchanged. -->
+<testsuites>
+	<testsuite name="answer endpoint" time="0.154449" disabled="0" errors="0" tests="12" failures="0" skipped="0" timestamp="2026-11-18T16:23:41.799Z" hostname="[REDACTED-HOST]">
+		<testcase name="returns sector 0 and its matching answer" time="0.068580" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="returns sector 1 and its matching answer" time="0.012224" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="returns sector 2 and its matching answer" time="0.006691" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="returns sector 3 and its matching answer" time="0.006543" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects invalid questions: {}" time="0.007024" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects invalid questions: {&quot;question&quot;:&quot;&quot;}" time="0.006366" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects invalid questions: {&quot;question&quot;:&quot;   &quot;}" time="0.005593" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects invalid questions: {&quot;question&quot;:42}" time="0.006112" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects invalid questions: {&quot;question&quot;:&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;}" time="0.006116" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="accepts a question at the length limit" time="0.006629" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="rejects malformed JSON without leaking server details" time="0.006192" classname="answer endpoint" file="tests\integration\app.test.js"/>
+		<testcase name="serves the page and a health endpoint" time="0.014343" classname="answer endpoint" file="tests\integration\app.test.js"/>
+	</testsuite>
+	<testsuite name="privacy-preserving application logs" time="0.514836" disabled="0" errors="0" tests="8" failures="0" skipped="0" timestamp="2026-11-18T16:23:41.951Z" hostname="[REDACTED-HOST]">
+		<testcase name="records request metadata without logging bodies, answers, queries or headers" time="0.006087" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="logs unknown paths without exposing input or exception details" time="0.005955" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="logs malformed JSON without exposing input or exception details" time="0.005173" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="logs oversized bodies without exposing input or exception details" time="0.005169" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="logs unexpected errors without exposing input or exception details" time="0.004717" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="logs health and static requests with distinct server-generated request IDs" time="0.009676" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="records an interrupted response once without reporting a completed HTTP status" time="0.007342" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+		<testcase name="reports a startup failure without a raw exception or environment details" time="0.470073" classname="privacy-preserving application logs" file="tests\integration\app.test.js"/>
+	</testsuite>
+	<testsuite name="privacy-preserving Prometheus metrics" time="0.147193" disabled="0" errors="0" tests="4" failures="0" skipped="0" timestamp="2026-11-18T16:23:42.340Z" hostname="[REDACTED-HOST]">
+		<testcase name="counts completed requests and observes latency without counting scrapes" time="0.094935" classname="privacy-preserving Prometheus metrics" file="tests\integration\metrics.test.js"/>
+		<testcase name="counts client/server errors using bounded labels without exposing input or exceptions" time="0.028035" classname="privacy-preserving Prometheus metrics" file="tests\integration\metrics.test.js"/>
+		<testcase name="counts an interrupted response exactly once and labels its status as aborted" time="0.011974" classname="privacy-preserving Prometheus metrics" file="tests\integration\metrics.test.js"/>
+		<testcase name="keeps registries isolated between application instances" time="0.010644" classname="privacy-preserving Prometheus metrics" file="tests\integration\metrics.test.js"/>
+	</testsuite>
+	<testcase name="dependency audit passes a clean audit without retrying" time="0.934647" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit fails vulnerabilities immediately without retrying" time="0.660024" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit fails other registry errors without retrying" time="0.666823" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit honours Retry-After seconds and passes a successful final attempt" time="0.662229" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit stops after the second rate-limited response" time="0.634623" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit honours an HTTP-date Retry-After header" time="0.691000" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit fails rather than retrying before a delay longer than the wait budget" time="0.632569" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit uses a bounded default delay when Retry-After is absent" time="0.588098" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit recognises an npm E429 error without a numeric status code" time="0.641396" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="dependency audit fails closed when the registry supplies an invalid Retry-After" time="0.608980" classname="test" file="tests\unit\audit-dependencies.test.js"/>
+	<testcase name="Kubernetes access check accepts the restricted identity and required access" time="0.796238" classname="test" file="tests\unit\kubernetes-access.test.js"/>
+	<testcase name="Kubernetes access check rejects administrator credentials" time="0.674374" classname="test" file="tests\unit\kubernetes-access.test.js"/>
+	<testcase name="Kubernetes access check fails when deployment permission is missing" time="0.664673" classname="test" file="tests\unit\kubernetes-access.test.js"/>
+	<testcase name="Kubernetes access check rejects unexpectedly granted Secret access" time="0.638867" classname="test" file="tests\unit\kubernetes-access.test.js"/>
+	<testcase name="Kubernetes access check does not treat an API error as an authorization denial" time="0.625762" classname="test" file="tests\unit\kubernetes-access.test.js"/>
+	<testcase name="local deployment verifies both replicas and the Service after a guarded rollout" time="1.166016" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment rejects administrator credentials before changing resources" time="0.719768" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment does not deploy over an unhealthy baseline" time="0.791294" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment recovers an applied patch even when its response was lost" time="1.026058" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment restores and verifies the previous image after a rollout failure but fails delivery" time="0.979768" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment recovers from an HTTP smoke failure without exposing exception content" time="0.981203" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment reports failed recovery rather than claiming success" time="0.901674" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment does not overwrite a concurrent deployment" time="0.883707" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local deployment detects a concurrent change during final HTTP checks without rolling it back" time="0.928712" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader loads only into the verified existing kind cluster" time="0.641197" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader makes the configured Docker executable discoverable to kind" time="0.622816" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader restores PATH after an image import failure" time="0.612037" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader rejects an image from a different revision" time="0.588662" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader rejects nodes from another cluster" time="0.606533" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testcase name="local image loader fails closed when the image import fails" time="0.605543" classname="test" file="tests\unit\local-delivery.test.js"/>
+	<testsuite name="wheel landing position" time="0.005162" disabled="0" errors="0" tests="8" failures="0" skipped="0" timestamp="2026-11-18T16:23:53.409Z" hostname="[REDACTED-HOST]">
+		<testcase name="places sector 0 beneath the top arrow after repeated spins" time="0.002031" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="places sector 1 beneath the top arrow after repeated spins" time="0.000198" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="places sector 2 beneath the top arrow after repeated spins" time="0.000110" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="places sector 3 beneath the top arrow after repeated spins" time="0.000142" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="rejects invalid sector -1" time="0.000538" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="rejects invalid sector 4" time="0.000292" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="rejects invalid sector 1.5" time="0.000119" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+		<testcase name="rejects invalid sector undefined" time="0.000127" classname="wheel landing position" file="tests\unit\wheel.test.js"/>
+	</testsuite>
+	<!-- tests 62 -->
+	<!-- suites 4 -->
+	<!-- pass 62 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 12217.5232 -->
+</testsuites>

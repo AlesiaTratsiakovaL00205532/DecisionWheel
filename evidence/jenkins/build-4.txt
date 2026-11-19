@@ -1,0 +1,151 @@
+Source: #4.txt (Jenkins console export).
+Sanitized copy: initiating user, user-profile paths, email addresses and audit-proxy hostname are redacted where present.
+No missing stages or results have been added. Original export retained separately.
+
+Started by user [REDACTED]
+Obtained Jenkinsfile from git https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 20 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git.exe rev-parse --resolve-git-dir C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\.git # timeout=10
+Fetching changes from the remote Git repository
+ > git.exe config remote.origin.url https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git # timeout=10
+Fetching upstream changes from https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+ > git.exe --version # timeout=10
+ > git --version # 'git version 2.56.1.vfs.0.1'
+ > git.exe fetch --tags --force --progress -- https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git.exe rev-parse "refs/remotes/origin/atratsiakova/jenkins^{commit}" # timeout=10
+Checking out Revision a8a4a020d1b5bcf82f4989ca8995f1eeb14dbbf9 (refs/remotes/origin/atratsiakova/jenkins)
+ > git.exe config core.sparsecheckout # timeout=10
+ > git.exe checkout -f a8a4a020d1b5bcf82f4989ca8995f1eeb14dbbf9 # timeout=10
+Commit message: "Make the test fail"
+ > git.exe rev-list --no-walk 7ef25cd4f0e108ada7da029e268eeefa16dcccdb # timeout=10
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\reports
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\test-results
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>node --version 
+v26.13.1
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd --version 
+11.20.0
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd ci --no-fund --no-audit 
+
+added 132 packages in 9s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit and integration tests)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd test -- --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml 
+
+> decision-wheel@1.0.0 test
+> vitest run --reporter=default --reporter=junit --outputFile.junit=reports/unit-integration.xml
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mC:/ProgramData/Jenkins/.jenkins/workspace/DecisionWheel[39m
+
+ [32m✓[39m tests/unit/wheel.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [31m❯[39m tests/integration/app.test.js [2m([22m[2m12 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 135[2mms[22m[39m
+     [32m✓[39m returns sector 0 and its matching answer[32m 61[2mms[22m[39m
+     [32m✓[39m returns sector 1 and its matching answer[32m 8[2mms[22m[39m
+     [32m✓[39m returns sector 2 and its matching answer[32m 5[2mms[22m[39m
+     [32m✓[39m returns sector 3 and its matching answer[32m 5[2mms[22m[39m
+     [32m✓[39m rejects invalid questions: {}[32m 6[2mms[22m[39m
+     [32m✓[39m rejects invalid questions: {"question":""}[32m 5[2mms[22m[39m
+     [32m✓[39m rejects invalid questions: {"question":"   "}[32m 5[2mms[22m[39m
+     [32m✓[39m rejects invalid questions: {"question":42}[32m 4[2mms[22m[39m
+     [32m✓[39m rejects invalid questions: {"question":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}[32m 5[2mms[22m[39m
+     [32m✓[39m accepts a question at the length limit[32m 9[2mms[22m[39m
+     [32m✓[39m rejects malformed JSON without leaking server details[32m 5[2mms[22m[39m
+[31m     [31m×[31m serves the page and a health endpoint[39m[32m 15[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/integration/app.test.js[2m > [22manswer endpoint[2m > [22mserves the page and a health endpoint
+[31m[1mError[22m: expected 404 "Not Found", got 200 "OK"[39m
+[36m [2m❯[22m tests/integration/app.test.js:[2m47:56[22m[39m
+    [90m 45|[39m     [35mconst[39m app [33m=[39m [34mcreateApp[39m()[33m;[39m
+    [90m 46|[39m     await request(app).get('/').expect(200).expect('Content-Type', /ht…
+    [90m 47|[39m     [35mconst[39m response [33m=[39m [35mawait[39m [34mrequest[39m(app)[33m.[39m[35mget[39m([32m'/health'[39m)[33m.[39m[34mexpect[39m([34m404[39m)[33m;[39m
+    [90m   |[39m                                                        [31m^[39m
+    [90m 48|[39m     [34mexpect[39m(response[33m.[39mbody)[33m.[39m[34mtoEqual[39m({ status[33m:[39m [32m'ok'[39m })[33m;[39m
+    [90m 49|[39m   })[33m;[39m
+[90m [2m❯[22m Test._assertStatus node_modules/supertest/lib/test.js:[2m535:14[22m[39m
+[90m [2m❯[22m node_modules/supertest/lib/test.js:[2m591:13[22m[39m
+[90m [2m❯[22m Test._assertFunction node_modules/supertest/lib/test.js:[2m568:13[22m[39m
+[90m [2m❯[22m Test.assert node_modules/supertest/lib/test.js:[2m432:23[22m[39m
+[90m [2m❯[22m localAssert node_modules/supertest/lib/test.js:[2m382:38[22m[39m
+[90m [2m❯[22m Server.<anonymous> node_modules/supertest/lib/test.js:[2m126:7[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m19 passed[39m[22m[90m (20)[39m
+[2m   Start at [22m 10:58:24
+[2m   Duration [22m 896ms[2m (transform 68ms, setup 0ms, import 482ms, tests 141ms, environment 1ms)[22m
+
+JUNIT report written to C:/ProgramData/Jenkins/.jenkins/workspace/DecisionWheel/reports/unit-integration.xml
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install browser runtime)
+Stage "Install browser runtime" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Browser tests)
+Stage "Browser tests" skipped due to earlier failure(s)
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+ERROR: script returned exit code 1
+Finished: FAILURE
