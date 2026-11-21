@@ -1,0 +1,31 @@
+<!-- Reviewed Jenkins build #24 copy: agent hostname and absolute workspace prefixes redacted; test outcomes unchanged. -->
+<testsuites id="" name="" tests="13" failures="0" skipped="0" errors="0" time="15.259103">
+<testsuite name="wheel.spec.js" timestamp="2026-11-18T16:24:01.045Z" hostname="" tests="13" failures="0" skipped="0" time="12.068" errors="0">
+<testcase name="spins to the chosen answer, preserves history on cancelled refresh, and clears on confirmed refresh" classname="wheel.spec.js" time="5.886">
+</testcase>
+<testcase name="keeps questions as text, handles repeated spins, and puts the newest entry first" classname="wheel.spec.js" time="0.753">
+</testcase>
+<testcase name="rejects whitespace and recovers after a network error without adding history" classname="wheel.spec.js" time="0.345">
+</testcase>
+<testcase name="fits a fresh page within a 320x800 screen" classname="wheel.spec.js" time="0.196">
+</testcase>
+<testcase name="fits a fresh page within a 360x800 screen" classname="wheel.spec.js" time="0.199">
+</testcase>
+<testcase name="fits a fresh page within a 390x844 screen" classname="wheel.spec.js" time="0.193">
+</testcase>
+<testcase name="fits a fresh page within a 768x1024 screen" classname="wheel.spec.js" time="0.203">
+</testcase>
+<testcase name="fits a fresh page within a 1280x600 screen" classname="wheel.spec.js" time="0.198">
+</testcase>
+<testcase name="fits a fresh page within a 1280x720 screen" classname="wheel.spec.js" time="0.216">
+</testcase>
+<testcase name="fits a fresh page within a 1366x768 screen" classname="wheel.spec.js" time="0.196">
+</testcase>
+<testcase name="fits a fresh page within a 1920x1080 screen" classname="wheel.spec.js" time="0.197">
+</testcase>
+<testcase name="points the top of each label toward its outer wheel edge" classname="wheel.spec.js" time="0.188">
+</testcase>
+<testcase name="allows the page to grow when question history becomes long" classname="wheel.spec.js" time="3.298">
+</testcase>
+</testsuite>
+</testsuites>

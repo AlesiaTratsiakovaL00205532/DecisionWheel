@@ -1,0 +1,11 @@
+﻿{
+    "timestamp":  "2026-11-18T15:49:50.8363182Z",
+    "mode":  "local-kind",
+    "registry_published":  false,
+    "source_commit":  "",
+    "candidate_image":  "decision-wheel:recovery-fixture-c230f43e8750",
+    "previous_image":  "decision-wheel:sha-b598768d286b714e6ccaaa7b2911dfcec489f5ce",
+    "result":  "rolled_back",
+    "failure_phase":  "rollout",
+    "recovery":  "verified"
+}

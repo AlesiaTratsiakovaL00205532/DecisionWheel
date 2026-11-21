@@ -1,0 +1,7 @@
+{
+  "deployment_exit_code": 1,
+  "failure_phase": "rollout",
+  "recovery": "verified",
+  "restored_image": "decision-wheel:sha-b598768d286b714e6ccaaa7b2911dfcec489f5ce",
+  "fixture_image": "decision-wheel:recovery-fixture-c230f43e8750"
+}

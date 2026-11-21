@@ -1,0 +1,579 @@
+Source: #24.txt (Jenkins console export).
+Sanitized copy: initiating user, user-profile paths, email addresses and audit-proxy hostname are redacted where present.
+No missing stages or results have been added. Original export retained separately.
+
+Started by user [REDACTED]
+Obtained Jenkinsfile from git https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+[Pipeline] Start of Pipeline
+[Pipeline] node
+Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel
+[Pipeline] {
+[Pipeline] withEnv
+[Pipeline] {
+[Pipeline] timeout
+Timeout set to expire in 45 min
+[Pipeline] {
+[Pipeline] stage
+[Pipeline] { (Checkout)
+[Pipeline] script
+[Pipeline] {
+[Pipeline] checkout
+Selected Git installation does not exist. Using Default
+The recommended git tool is: NONE
+No credentials specified
+ > git.exe rev-parse --resolve-git-dir C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\.git # timeout=10
+Fetching changes from the remote Git repository
+ > git.exe config remote.origin.url https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git # timeout=10
+Fetching upstream changes from https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git
+ > git.exe --version # timeout=10
+ > git --version # 'git version 2.56.1.vfs.0.1'
+ > git.exe fetch --tags --force --progress -- https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel.git +refs/heads/*:refs/remotes/origin/* # timeout=10
+ > git.exe rev-parse "refs/remotes/origin/main^{commit}" # timeout=10
+Checking out Revision 0f0366e028b5b9f0605dbe80235586e9c9224e72 (refs/remotes/origin/main)
+ > git.exe config core.sparsecheckout # timeout=10
+ > git.exe checkout -f 0f0366e028b5b9f0605dbe80235586e9c9224e72 # timeout=10
+Commit message: "Merge pull request #16 from AlesiaTratsiakovaL00205532/atratsiakova/automatic-deployment"
+ > git.exe rev-list --no-walk e88590ad20cb168aa0b81310bf1f2bc3bccd3e16 # timeout=10
+[Pipeline] echo
+Checked out origin/main at 0f0366e028b5b9f0605dbe80235586e9c9224e72
+[Pipeline] echo
+Delivery target: local-kind. Local delivery does not publish to a registry.
+[Pipeline] }
+[Pipeline] // script
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\reports
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] dir
+Running in C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel\test-results
+[Pipeline] {
+[Pipeline] deleteDir
+[Pipeline] }
+[Pipeline] // dir
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install dependencies)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>node --version 
+v26.13.1
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd --version 
+11.20.0
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd ci --no-fund --no-audit 
+
+added 170 packages in 11s
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Static analysis)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run lint 
+
+> decision-wheel@1.0.0 lint
+> eslint . --max-warnings=0
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Check Kubernetes access)
+[Pipeline] withCredentials
+Masking supported pattern matches of %KUBECONFIG%
+[Pipeline] {
+[Pipeline] powershell
+Verified yes : get deployments/decision-wheel  in decision-wheel
+Verified yes : list deployments/decision-wheel  in decision-wheel
+Verified yes : watch deployments/decision-wheel  in decision-wheel
+Verified yes : patch deployments/decision-wheel  in decision-wheel
+Verified yes : get services/decision-wheel  in decision-wheel
+Verified yes : get pods  in decision-wheel
+Verified yes : list pods  in decision-wheel
+Verified yes : watch pods  in decision-wheel
+Verified yes : get pods portforward in decision-wheel
+Verified yes : create pods portforward in decision-wheel
+Verified no : get secrets  in decision-wheel
+Verified no : get pods  in default
+Verified no : patch deployments/other-app  in decision-wheel
+Verified no : create rolebindings  in decision-wheel
+Verified no : create pods exec in decision-wheel
+deployment.apps/decision-wheel
+service/decision-wheel
+Kubernetes access check passed. No deployment was changed.
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Dependency vulnerability scan)
+[Pipeline] powershell
+Dependency audit passed. See reports/npm-audit.json.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Unit and integration tests)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run test:ci 
+
+> decision-wheel@1.0.0 test:ci
+> node --test --test-reporter=spec --test-reporter=junit --test-reporter-destination=stdout --test-reporter-destination=reports/unit-integration.xml "tests/unit/*.test.js" "tests/integration/*.test.js"
+
+{"timestamp":"2026-11-18T16:23:41.860Z","level":"info","event":"http_request","request_id":"aa39ee24-68a9-48d9-bb2c-21e5c11fdc66","method":"POST","route":"/api/spin","status":200,"duration_ms":28.171,"outcome":"completed"}
+▶ answer endpoint
+  ✔ returns sector 0 and its matching answer (68.5799ms)
+{"timestamp":"2026-11-18T16:23:41.876Z","level":"info","event":"http_request","request_id":"eb51aa63-f4b7-4b52-802a-ff830bde0113","method":"POST","route":"/api/spin","status":200,"duration_ms":0.894,"outcome":"completed"}
+  ✔ returns sector 1 and its matching answer (12.2243ms)
+{"timestamp":"2026-11-18T16:23:41.883Z","level":"info","event":"http_request","request_id":"1b020e98-f3df-4f1e-929e-de435a7cb020","method":"POST","route":"/api/spin","status":200,"duration_ms":0.559,"outcome":"completed"}
+  ✔ returns sector 2 and its matching answer (6.6914ms)
+{"timestamp":"2026-11-18T16:23:41.890Z","level":"info","event":"http_request","request_id":"109313c9-e517-4af7-800a-b0c814adc024","method":"POST","route":"/api/spin","status":200,"duration_ms":0.6,"outcome":"completed"}
+  ✔ returns sector 3 and its matching answer (6.5433ms)
+{"timestamp":"2026-11-18T16:23:41.896Z","level":"warn","event":"http_request","request_id":"99346d1d-201c-40d5-b1c5-1ae37f682b10","method":"POST","route":"/api/spin","status":400,"duration_ms":0.762,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects invalid questions: {} (7.0242ms)
+{"timestamp":"2026-11-18T16:23:41.903Z","level":"warn","event":"http_request","request_id":"7a359fb2-b37e-4a3f-9e0c-82ea0b5fc033","method":"POST","route":"/api/spin","status":400,"duration_ms":0.69,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects invalid questions: {"question":""} (6.3661ms)
+{"timestamp":"2026-11-18T16:23:41.909Z","level":"warn","event":"http_request","request_id":"522fca6e-e0db-488c-869a-72511e25855a","method":"POST","route":"/api/spin","status":400,"duration_ms":0.541,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects invalid questions: {"question":"   "} (5.5927ms)
+{"timestamp":"2026-11-18T16:23:41.915Z","level":"warn","event":"http_request","request_id":"fd8ddef9-6017-4857-815f-3d6aa05fd18a","method":"POST","route":"/api/spin","status":400,"duration_ms":0.447,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects invalid questions: {"question":42} (6.112ms)
+{"timestamp":"2026-11-18T16:23:41.922Z","level":"warn","event":"http_request","request_id":"4efb96d2-0095-4270-a1b8-642dad3da740","method":"POST","route":"/api/spin","status":400,"duration_ms":0.608,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects invalid questions: {"question":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"} (6.1158ms)
+{"timestamp":"2026-11-18T16:23:41.928Z","level":"info","event":"http_request","request_id":"2ccbe2be-1a1e-440f-97a5-983d65c2a4fe","method":"POST","route":"/api/spin","status":200,"duration_ms":0.779,"outcome":"completed"}
+  ✔ accepts a question at the length limit (6.6291ms)
+{"timestamp":"2026-11-18T16:23:41.934Z","level":"warn","event":"http_request","request_id":"3fa4b23a-024a-47da-ae0d-5be872ca8c7a","method":"POST","route":"/api/spin","status":400,"duration_ms":1.052,"outcome":"completed","error_code":"bad_request"}
+  ✔ rejects malformed JSON without leaking server details (6.1924ms)
+{"timestamp":"2026-11-18T16:23:41.943Z","level":"info","event":"http_request","request_id":"3a50f58f-df65-4442-b0cb-8116a1d0618d","method":"GET","route":"other","status":200,"duration_ms":3.702,"outcome":"completed"}
+{"timestamp":"2026-11-18T16:23:41.949Z","level":"info","event":"http_request","request_id":"cf9a606f-63ff-4a79-afe6-196cd3aa9bda","method":"GET","route":"/health","status":200,"duration_ms":0.42,"outcome":"completed"}
+  ✔ serves the page and a health endpoint (14.343ms)
+✔ answer endpoint (154.4492ms)
+▶ privacy-preserving application logs
+  ✔ records request metadata without logging bodies, answers, queries or headers (6.087ms)
+  ✔ logs unknown paths without exposing input or exception details (5.9553ms)
+  ✔ logs malformed JSON without exposing input or exception details (5.1731ms)
+  ✔ logs oversized bodies without exposing input or exception details (5.169ms)
+  ✔ logs unexpected errors without exposing input or exception details (4.7173ms)
+  ✔ logs health and static requests with distinct server-generated request IDs (9.676ms)
+  ✔ records an interrupted response once without reporting a completed HTTP status (7.3418ms)
+  ✔ reports a startup failure without a raw exception or environment details (470.0734ms)
+✔ privacy-preserving application logs (514.8359ms)
+▶ privacy-preserving Prometheus metrics
+  ✔ counts completed requests and observes latency without counting scrapes (94.9346ms)
+  ✔ counts client/server errors using bounded labels without exposing input or exceptions (28.0347ms)
+  ✔ counts an interrupted response exactly once and labels its status as aborted (11.9737ms)
+  ✔ keeps registries isolated between application instances (10.6444ms)
+✔ privacy-preserving Prometheus metrics (147.1928ms)
+✔ dependency audit passes a clean audit without retrying (934.6469ms)
+✔ dependency audit fails vulnerabilities immediately without retrying (660.0242ms)
+✔ dependency audit fails other registry errors without retrying (666.823ms)
+✔ dependency audit honours Retry-After seconds and passes a successful final attempt (662.2288ms)
+✔ dependency audit stops after the second rate-limited response (634.6233ms)
+✔ dependency audit honours an HTTP-date Retry-After header (691.0001ms)
+✔ dependency audit fails rather than retrying before a delay longer than the wait budget (632.569ms)
+✔ dependency audit uses a bounded default delay when Retry-After is absent (588.0981ms)
+✔ dependency audit recognises an npm E429 error without a numeric status code (641.3956ms)
+✔ dependency audit fails closed when the registry supplies an invalid Retry-After (608.98ms)
+✔ Kubernetes access check accepts the restricted identity and required access (796.2382ms)
+✔ Kubernetes access check rejects administrator credentials (674.3743ms)
+✔ Kubernetes access check fails when deployment permission is missing (664.673ms)
+✔ Kubernetes access check rejects unexpectedly granted Secret access (638.867ms)
+✔ Kubernetes access check does not treat an API error as an authorization denial (625.762ms)
+✔ local deployment verifies both replicas and the Service after a guarded rollout (1166.0157ms)
+✔ local deployment rejects administrator credentials before changing resources (719.7678ms)
+✔ local deployment does not deploy over an unhealthy baseline (791.2939ms)
+✔ local deployment recovers an applied patch even when its response was lost (1026.0582ms)
+✔ local deployment restores and verifies the previous image after a rollout failure but fails delivery (979.7677ms)
+✔ local deployment recovers from an HTTP smoke failure without exposing exception content (981.2028ms)
+✔ local deployment reports failed recovery rather than claiming success (901.6736ms)
+✔ local deployment does not overwrite a concurrent deployment (883.7066ms)
+✔ local deployment detects a concurrent change during final HTTP checks without rolling it back (928.7116ms)
+✔ local image loader loads only into the verified existing kind cluster (641.1972ms)
+✔ local image loader makes the configured Docker executable discoverable to kind (622.8156ms)
+✔ local image loader restores PATH after an image import failure (612.0374ms)
+✔ local image loader rejects an image from a different revision (588.662ms)
+✔ local image loader rejects nodes from another cluster (606.5333ms)
+✔ local image loader fails closed when the image import fails (605.5426ms)
+▶ wheel landing position
+  ✔ places sector 0 beneath the top arrow after repeated spins (2.0306ms)
+  ✔ places sector 1 beneath the top arrow after repeated spins (0.1979ms)
+  ✔ places sector 2 beneath the top arrow after repeated spins (0.1097ms)
+  ✔ places sector 3 beneath the top arrow after repeated spins (0.1416ms)
+  ✔ rejects invalid sector -1 (0.5381ms)
+  ✔ rejects invalid sector 4 (0.2919ms)
+  ✔ rejects invalid sector 1.5 (0.1186ms)
+  ✔ rejects invalid sector undefined (0.1266ms)
+✔ wheel landing position (5.1619ms)
+ℹ tests 62
+ℹ suites 4
+ℹ pass 62
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12217.5232
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Install browser runtime)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npx.cmd playwright install chromium 
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Browser tests)
+[Pipeline] bat
+
+C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel>call npm.cmd run test:browser -- --reporter=line,junit 
+
+> decision-wheel@1.0.0 test:browser
+> playwright test --reporter=line,junit
+
+
+Running 13 tests using 1 worker
+
+[1/13] tests\browser\wheel.spec.js:3:1 › spins to the chosen answer, preserves history on cancelled refresh, and clears on confirmed refresh
+[2/13] tests\browser\wheel.spec.js:34:1 › keeps questions as text, handles repeated spins, and puts the newest entry first
+[3/13] tests\browser\wheel.spec.js:49:1 › rejects whitespace and recovers after a network error without adding history
+[4/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 320x800 screen
+[5/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 360x800 screen
+[6/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 390x844 screen
+[7/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 768x1024 screen
+[8/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1280x600 screen
+[9/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1280x720 screen
+[10/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1366x768 screen
+[11/13] tests\browser\wheel.spec.js:64:3 › fits a fresh page within a 1920x1080 screen
+[12/13] tests\browser\wheel.spec.js:74:1 › points the top of each label toward its outer wheel edge
+[13/13] tests\browser\wheel.spec.js:91:1 › allows the page to grow when question history becomes long
+  13 passed (15.3s)
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Check Docker access)
+[Pipeline] powershell
+Client:
+ Version:           29.9.2
+ API version:       1.56
+ Go version:        go1.26.10
+ Git commit:        a82e528
+ Built:             Tue Oct 20 19:44:07 2026
+ OS/Arch:           windows/amd64
+ Context:           default
+
+Server: Docker Desktop 4.98.0 (245422)
+ Engine:
+  Version:          29.9.2
+  API version:      1.56 (minimum version 1.40)
+  Go version:       go1.26.10
+  Git commit:       0367cbe
+  Built:            Tue Oct 20 18:45:02 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.4.2
+  GitCommit:        b7a25261e029d68978bbf290df0a62fc819b3c51
+ runc:
+  Version:          1.5.2
+  GitCommit:        v1.5.2-0-g29dd3dc2
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Build Docker image)
+[Pipeline] powershell
+powershell.exe : DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+At C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel@tmp\durable-25c6b75b\powershellWrapper.ps1:3 char:1
++ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (DEPRECATED: The...future release.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+Sending build context to Docker daemon  117.2kB
+
+Step 1/18 : ARG NODE_VERSION=26.13.1
+Step 2/18 : FROM node:${NODE_VERSION}-alpine3.24 AS dependencies
+26.13.1-alpine3.24: Pulling from library/node
+Digest: sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5
+Status: Image is up to date for node:26.13.1-alpine3.24
+ ---> 6bd9ab43c0ec
+Step 3/18 : WORKDIR /app
+ ---> Using cache
+ ---> 56ff29d61a90
+Step 4/18 : COPY package.json package-lock.json ./
+ ---> Using cache
+ ---> 1390d942bb2a
+Step 5/18 : RUN npm ci --omit=dev --no-audit --no-fund
+ ---> Using cache
+ ---> 0fe776b50d27
+Step 6/18 : FROM node:${NODE_VERSION}-alpine3.24 AS runtime
+26.13.1-alpine3.24: Pulling from library/node
+Digest: sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5
+Status: Image is up to date for node:26.13.1-alpine3.24
+ ---> 6bd9ab43c0ec
+Step 7/18 : RUN apk upgrade --no-cache zlib     && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+ ---> Using cache
+ ---> c26665ea0a36
+Step 8/18 : ENV NODE_ENV=production     HOST=0.0.0.0     PORT=3000
+ ---> Using cache
+ ---> c333d1c7199c
+Step 9/18 : WORKDIR /app
+ ---> Using cache
+ ---> 7cbf1541c041
+Step 10/18 : COPY --from=dependencies /app/node_modules ./node_modules
+ ---> Using cache
+ ---> 5dfe333d47de
+Step 11/18 : COPY package.json package-lock.json ./
+ ---> Using cache
+ ---> 2e2afc93308b
+Step 12/18 : COPY src ./src
+ ---> Using cache
+ ---> 80ee98b1613a
+Step 13/18 : COPY public ./public
+ ---> Using cache
+ ---> 73b638a3cca3
+Step 14/18 : USER node
+ ---> Using cache
+ ---> b52e5d9e0704
+Step 15/18 : EXPOSE 3000
+ ---> Using cache
+ ---> 68bbc2bbb45c
+Step 16/18 : CMD ["node", "src/server.js"]
+ ---> Using cache
+ ---> bdecddf8527f
+Step 17/18 : LABEL org.opencontainers.image.revision=0f0366e028b5b9f0605dbe80235586e9c9224e72
+ ---> Running in 86acaeac7356
+ ---> Removed intermediate container 86acaeac7356
+ ---> a7c63a306ecc
+Step 18/18 : LABEL org.opencontainers.image.source=https://github.com/AlesiaTratsiakovaL00205532/DecisionWheel
+ ---> Running in 1fa9d5af8786
+ ---> Removed intermediate container 1fa9d5af8786
+ ---> b9fe12ff706f
+Successfully built b9fe12ff706f
+Successfully tagged decision-wheel:sha-0f0366e028b5b9f0605dbe80235586e9c9224e72
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Container vulnerability scan)
+[Pipeline] powershell
+powershell.exe : 2026-11-18T16:24:28Z	INFO	[vuln] Vulnerability scanning is enabled
+At C:\ProgramData\Jenkins\.jenkins\workspace\DecisionWheel@tmp\durable-9556cf78\powershellWrapper.ps1:3 char:1
++ & powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -Comm ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-11-18T16:2...ning is enabled:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2026-11-18T16:24:39Z	INFO	Detected OS	family="alpine" version="3.24.4"
+2026-11-18T16:24:39Z	INFO	[alpine] Detecting vulnerabilities...	os_version="3.24" repository="3.24" pkg_num=19
+2026-11-18T16:24:39Z	INFO	Number of language-specific files	num=1
+2026-11-18T16:24:39Z	INFO	[node-pkg] Detecting vulnerabilities...
+
+Report Summary
+
+┌───────────────────────────────────────────────────────┬──────────┬─────────────────┐
+│                        Target                         │   Type   │ Vulnerabilities │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ /reports/image-scan.tar (alpine 3.24.4)               │  alpine  │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/@opentelemetry/api/package.json      │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/accepts/package.json                 │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/bintrees/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/body-parser/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/bytes/package.json                   │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/call-bind-apply-helpers/package.json │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/call-bound/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/content-disposition/package.json     │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/content-type/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/cookie-signature/package.json        │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/cookie/package.json                  │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/debug/package.json                   │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/depd/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/dunder-proto/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/ee-first/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/encodeurl/package.json               │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/es-define-property/package.json      │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/es-errors/package.json               │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/es-object-atoms/package.json         │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/escape-html/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/etag/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/express/package.json                 │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/finalhandler/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/forwarded/package.json               │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/fresh/package.json                   │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/function-bind/package.json           │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/get-intrinsic/package.json           │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/get-proto/package.json               │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/gopd/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/has-symbols/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/hasown/package.json                  │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/http-errors/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/iconv-lite/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/inherits/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/ipaddr.js/package.json               │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/is-promise/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/math-intrinsics/package.json         │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/media-typer/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/merge-descriptors/package.json       │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/mime-db/package.json                 │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/mime-types/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/ms/package.json                      │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/negotiator/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/object-inspect/package.json          │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/on-finished/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/once/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/parseurl/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/path-to-regexp/package.json          │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/prom-client/package.json             │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/proxy-addr/package.json              │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/qs/package.json                      │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/range-parser/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/raw-body/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/router/package.json                  │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/safer-buffer/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/send/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/serve-static/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/setprototypeof/package.json          │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/side-channel-list/package.json       │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/side-channel-map/package.json        │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/side-channel-weakmap/package.json    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/side-channel/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/statuses/package.json                │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/tdigest/package.json                 │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/toidentifier/package.json            │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/type-is/package.json                 │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/unpipe/package.json                  │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/vary/package.json                    │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/node_modules/wrappy/package.json                  │ node-pkg │        0        │
+├───────────────────────────────────────────────────────┼──────────┼─────────────────┤
+│ app/package.json                                      │ node-pkg │        0        │
+└───────────────────────────────────────────────────────┴──────────┴─────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Load local image)
+[Pipeline] powershell
+Tested image loaded into decision-wheel. No registry publication was attempted.
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Deploy locally and verify)
+[Pipeline] withCredentials
+Masking supported pattern matches of %KUBECONFIG%
+[Pipeline] {
+[Pipeline] powershell
+deployment "decision-wheel" successfully rolled out
+Waiting for deployment "decision-wheel" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "decision-wheel" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "decision-wheel" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "decision-wheel" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "decision-wheel" rollout to finish: 1 old replicas are pending termination...
+deployment "decision-wheel" successfully rolled out
+Local rollout and per-replica/service HTTP checks passed. No registry publication is claimed.
+[Pipeline] }
+[Pipeline] // withCredentials
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Publish to GHCR)
+Stage "Publish to GHCR" skipped due to when conditional
+[Pipeline] getContext
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] stage
+[Pipeline] { (Declarative: Post Actions)
+[Pipeline] junit
+Recording test results
+[Checks API] No suitable checks publisher found.
+[Pipeline] archiveArtifacts
+Archiving artifacts
+[Pipeline] }
+[Pipeline] // stage
+[Pipeline] }
+[Pipeline] // timeout
+[Pipeline] }
+[Pipeline] // withEnv
+[Pipeline] }
+[Pipeline] // node
+[Pipeline] End of Pipeline
+Finished: SUCCESS

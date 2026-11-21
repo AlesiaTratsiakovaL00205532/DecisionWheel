@@ -1,0 +1,24 @@
+﻿{
+    "timestamp":  "2026-11-18T12:11:13.2318791Z",
+    "source_commit":  "601a08a9126b71e49e74a80396ef2dbd4428088f",
+    "image":  "decision-wheel:sha-601a08a9126b71e49e74a80396ef2dbd4428088f",
+    "deployment":  "manual Terraform rollout to local kind; not registry publication or Jenkins deployment",
+    "replicas":  [
+                     {
+                         "pod":  "decision-wheel-f8fd68b6-5fkhf",
+                         "image_id":  "docker.io/library/import-2026-11-18@sha256:bc094433c9acee6370e3310e5ee7bd80fbf93546e9aa404fc240ae0946483474",
+                         "healthy":  true,
+                         "correlated_request_logs":  4,
+                         "warning_logs":  2,
+                         "privacy_check_passed":  true
+                     },
+                     {
+                         "pod":  "decision-wheel-f8fd68b6-ktbdg",
+                         "image_id":  "docker.io/library/import-2026-11-18@sha256:bc094433c9acee6370e3310e5ee7bd80fbf93546e9aa404fc240ae0946483474",
+                         "healthy":  true,
+                         "correlated_request_logs":  4,
+                         "warning_logs":  2,
+                         "privacy_check_passed":  true
+                     }
+                 ]
+}
